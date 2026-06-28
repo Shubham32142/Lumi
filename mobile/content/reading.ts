@@ -18,8 +18,9 @@ export interface OutlookItem {
 export type SuggestionIcon = 'rest' | 'eat' | 'move' | 'mind';
 
 export interface DetailItem {
-  name: string; // the concrete thing, e.g. "Spinach & kale"
+  name: string; // the concrete thing, e.g. "Palak & methi"
   note?: string; // a 1-3 word reason, e.g. "iron"
+  diet?: 'nonveg'; // shown only to non-veg users; everything else is veg
 }
 
 export interface SuggestionDetail {
@@ -86,6 +87,8 @@ export const PHASE_READING: Record<Phase, PhaseReading> = {
             { name: 'Dates & sesame (khajur, til)', note: 'iron' },
             { name: 'Amla or nimbu', note: 'vitamin C helps you absorb iron' },
             { name: 'Ginger or ajwain water', note: 'eases cramps' },
+            { name: 'Eggs', note: 'iron + protein', diet: 'nonveg' },
+            { name: 'Chicken or fish', note: 'iron + protein', diet: 'nonveg' },
           ],
           why: 'Bleeding loses iron, which adds to the tired, foggy feeling. Pair iron foods with vitamin C like amla or nimbu to absorb more.',
         },
@@ -162,7 +165,8 @@ export const PHASE_READING: Record<Phase, PhaseReading> = {
             { name: 'Moong sprouts' },
             { name: 'Palak & leafy greens' },
             { name: 'Flax & pumpkin seeds (alsi)' },
-            { name: 'Paneer, dal or eggs', note: 'protein for the energy' },
+            { name: 'Paneer or dal', note: 'protein for the energy' },
+            { name: 'Eggs or chicken', note: 'protein', diet: 'nonveg' },
           ],
           why: 'Fresh, fibre-rich food supports the rising estrogen and keeps your energy steady.',
         },
@@ -224,6 +228,7 @@ export const PHASE_READING: Record<Phase, PhaseReading> = {
             { name: 'Seasonal fruit & salad' },
             { name: 'Millets (jowar, bajra, ragi)', note: 'fibre helps clear estrogen' },
             { name: 'Plenty of water or nimbu paani' },
+            { name: 'Grilled fish or eggs', note: 'light protein', diet: 'nonveg' },
           ],
           why: 'With estrogen high, fibre and water help your body process hormones and feel its best.',
         },
@@ -256,6 +261,7 @@ export const PHASE_READING: Record<Phase, PhaseReading> = {
             { name: 'Almonds & seeds (til, pumpkin)', note: 'magnesium' },
             { name: 'Dark chocolate', note: 'magnesium' },
             { name: 'Palak & leafy greens' },
+            { name: 'Eggs', note: 'protein + B vitamins', diet: 'nonveg' },
           ],
           why: 'Falling serotonin drives sugar cravings. Steady carbs and magnesium keep mood and blood sugar even.',
         },

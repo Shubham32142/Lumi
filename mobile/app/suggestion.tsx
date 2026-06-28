@@ -5,6 +5,7 @@ import { Pressable, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Apple, ChevronRight, Footprints, Lightbulb, Moon, type LucideIcon } from 'lucide-react-native';
 import { useTheme } from '@/theme';
+import { useStore } from '@/lib/store';
 import type { Phase } from '@/lib/types';
 import { phaseColors } from '@/theme/phases';
 import { PHASE_READING, type SuggestionIcon } from '@/content/reading';
@@ -36,7 +37,10 @@ export default function SuggestionDetailScreen() {
     );
   }
 
+  const diet = useStore((s) => s.profile.diet);
   const detail = suggestion.detail;
+  // Veg users never see non-veg items; non-veg users see everything.
+  const items = detail.items.filter((it) => diet === 'nonveg' || it.diet !== 'nonveg');
   const Icon = ICON[suggestion.icon];
   const { accent, soft } = phaseColors(theme.color, phase);
 
@@ -63,7 +67,7 @@ export default function SuggestionDetailScreen() {
 
         <Card>
           <View style={{ gap: theme.space[3] }}>
-            {detail.items.map((it, k) => (
+            {items.map((it, k) => (
               <View key={k} className="flex-row items-start" style={{ gap: theme.space[3] }}>
                 <View
                   style={{

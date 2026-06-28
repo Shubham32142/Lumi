@@ -88,6 +88,7 @@ export default function Onboarding() {
       periodLength: DEFAULT_PROFILE.periodLength,
       lastPeriodDate: periodKnown ? lastPeriodDate : null,
       isIrregular,
+      diet: DEFAULT_PROFILE.diet,
       trackedSymptoms: tracked,
       notificationPrefs: {
         enabled: notifEnabled,

@@ -5,6 +5,7 @@ export type Phase = 'menstruation' | 'follicular' | 'ovulation' | 'luteal';
 
 export type ExperienceLevel = 'first_timer' | 'somewhat_familiar' | 'know_my_cycle';
 export type AgeRange = '13-17' | '18-25' | '26-35' | '36+';
+export type DietPreference = 'veg' | 'nonveg';
 
 // ── Symptom value sets (match the requirements doc) ──
 export type Mood =
@@ -81,6 +82,7 @@ export interface Profile {
   periodLength: number; // average bleed days
   lastPeriodDate: string | null; // ISO date, null = "not sure"
   isIrregular: boolean;
+  diet: DietPreference; // filters food suggestions (veg-first, on-device only)
   trackedSymptoms: SymptomKey[];
   notificationPrefs: NotificationPrefs;
   partnerSharing: PartnerSharing;

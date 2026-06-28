@@ -17,6 +17,7 @@ import {
   Sun,
   SunMoon,
   User,
+  Utensils,
   type LucideIcon,
 } from 'lucide-react-native';
 import { useTheme, useThemeStore, type ThemeMode } from '@/theme';
@@ -376,6 +377,27 @@ export default function Settings() {
                   onPress={() => toggleTracked(o.key)}
                 />
               ))}
+            </View>
+          </Card>
+        </Section>
+
+        {/* ── Food ── */}
+        <Section title="Food suggestions" icon={Utensils}>
+          <Card>
+            <AppText variant="caption" style={{ marginBottom: theme.space[2] }}>
+              We tailor the "what to eat" tips to your diet.
+            </AppText>
+            <View className="flex-row" style={{ gap: theme.space[2] }}>
+              <ChoiceChip
+                label="Vegetarian"
+                selected={profile.diet !== 'nonveg'}
+                onPress={() => updateProfile({ diet: 'veg' })}
+              />
+              <ChoiceChip
+                label="Non-veg"
+                selected={profile.diet === 'nonveg'}
+                onPress={() => updateProfile({ diet: 'nonveg' })}
+              />
             </View>
           </Card>
         </Section>

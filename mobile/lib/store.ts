@@ -38,6 +38,7 @@ export const DEFAULT_PROFILE: Profile = {
   periodLength: 5,
   lastPeriodDate: null,
   isIrregular: false,
+  diet: 'veg',
   trackedSymptoms: DEFAULT_TRACKED,
   notificationPrefs: {
     enabled: false,
