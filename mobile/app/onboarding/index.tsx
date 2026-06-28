@@ -156,40 +156,51 @@ export default function Onboarding() {
 
       {step === 3 && (
         <StepShell icon={CalendarDays} title="When did your last period start?"
-          body="Tap the day it began. Not sure? That's okay, just skip it.">
+          body="Tap the day it began. Not sure? That is completely okay.">
           <View style={{ gap: theme.space[3] }}>
-            <ChoiceChip
-              label="I'm not sure"
-              selected={!periodKnown}
-              onPress={() => {
-                setPeriodKnown(false);
-                setLastPeriodDate(null);
-              }}
-            />
-            {periodKnown && (
-              <Card>
-                <MonthCalendar
-                  cursor={cursor}
-                  onCursorChange={setCursor}
-                  selected={lastPeriodDate}
-                  disableFuture
-                  onSelectDay={(iso) => {
-                    setLastPeriodDate(iso);
-                    setPeriodKnown(true);
+            {periodKnown ? (
+              <>
+                <Card>
+                  <MonthCalendar
+                    cursor={cursor}
+                    onCursorChange={setCursor}
+                    selected={lastPeriodDate}
+                    disableFuture
+                    onSelectDay={(iso) => {
+                      setLastPeriodDate(iso);
+                      setPeriodKnown(true);
+                    }}
+                  />
+                </Card>
+                {lastPeriodDate ? (
+                  <AppText variant="secondary">Got it. {formatLong(lastPeriodDate)}</AppText>
+                ) : null}
+                <Button
+                  title="I don't know my cycle"
+                  variant="secondary"
+                  onPress={() => {
+                    setPeriodKnown(false);
+                    setLastPeriodDate(null);
                   }}
                 />
+              </>
+            ) : (
+              <Card roomy>
+                <View style={{ gap: theme.space[3] }}>
+                  <AppText variant="title">That is completely normal</AppText>
+                  <AppText variant="secondary">
+                    Most people don't know it off the top of their head. We'll start with a gentle
+                    estimate and learn your real pattern as you log. You can set your last period any
+                    time from the home screen.
+                  </AppText>
+                  <Button
+                    title="Actually, let me pick a date"
+                    variant="secondary"
+                    onPress={() => setPeriodKnown(true)}
+                  />
+                </View>
               </Card>
             )}
-            {periodKnown && lastPeriodDate ? (
-              <AppText variant="secondary">Got it. {formatLong(lastPeriodDate)}</AppText>
-            ) : null}
-            {!periodKnown ? (
-              <ChoiceChip
-                label="Actually, let me pick a date"
-                selected={periodKnown}
-                onPress={() => setPeriodKnown(true)}
-              />
-            ) : null}
           </View>
         </StepShell>
       )}

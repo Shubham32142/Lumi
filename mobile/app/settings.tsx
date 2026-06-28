@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Alert, Pressable, Share, Switch, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 import {
@@ -58,6 +59,20 @@ export default function Settings() {
   const syncing = useStore((s) => s.syncing);
   const themeMode = useThemeStore((s) => s.mode);
   const setThemeMode = useThemeStore((s) => s.setMode);
+  const supporterCode = useStore((s) => s.supporterCode);
+  const becomeSupporter = useStore((s) => s.becomeSupporter);
+  const [codeInput, setCodeInput] = useState('');
+
+  function connectSupporter() {
+    if (!codeInput.trim()) {
+      toast.error('Enter the code your partner shared with you.');
+      return;
+    }
+    becomeSupporter(codeInput.trim());
+    setCodeInput('');
+    toast.success('Connected. Opening their support view.');
+    router.push('/partner');
+  }
 
   function toggleTracked(key: SymptomKey) {
     const has = profile.trackedSymptoms.includes(key);
@@ -114,7 +129,7 @@ export default function Settings() {
   function confirmDeleteAccount() {
     Alert.alert(
       'Delete account?',
-      'This permanently deletes your cloud account and all synced data. This cannot be undone. Your data on this device will stay.',
+      'This permanently deletes your account and all your data, both in the cloud and on this device. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -124,6 +139,7 @@ export default function Settings() {
             try {
               await deleteAccount();
               toast.success('Account deleted.');
+              router.replace('/auth');
             } catch {
               toast.error('Could not delete your account. Check your connection.');
             }
@@ -394,6 +410,29 @@ export default function Settings() {
                 <Button title="Preview partner view" variant="secondary" onPress={() => router.push('/partner')} />
               </>
             ) : null}
+
+            <Divider />
+            <View style={{ gap: theme.space[2] }}>
+              <AppText variant="label">Have a partner's code?</AppText>
+              <AppText variant="caption">
+                If someone shared their Lumi code with you, enter it to see how to support them this
+                week.
+              </AppText>
+              {supporterCode ? (
+                <AppText variant="body">Connected with {supporterCode}</AppText>
+              ) : null}
+              <TextInput
+                value={codeInput}
+                onChangeText={setCodeInput}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                placeholder="e.g. CYC-ABC123"
+                placeholderTextColor={theme.color.text.secondary}
+                className="rounded-md border border-line-input bg-page px-3 text-base text-ink"
+                style={{ height: theme.size.inputH }}
+              />
+              <Button title="Connect" variant="secondary" onPress={connectSupporter} />
+            </View>
           </Card>
         </Section>
 
@@ -421,8 +460,8 @@ export default function Settings() {
                 <Divider />
                 <Button title="Delete account" variant="danger" onPress={confirmDeleteAccount} />
                 <AppText variant="caption">
-                  Permanently removes your cloud account and synced data. Your data on this device
-                  stays unless you also delete it below.
+                  Permanently deletes your account and all your data, both in the cloud and on this
+                  device. This cannot be undone.
                 </AppText>
               </View>
             ) : (

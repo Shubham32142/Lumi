@@ -204,13 +204,21 @@ export const useStore = create<AppState>()(
       // Logging out keeps local data on the device; only the cloud link is dropped.
       clearSession: () => set({ session: null }),
 
-      // Permanently delete the cloud account + synced data, then drop the session.
-      // Local on-device data is left intact (use resetAll to wipe the device too).
+      // Permanently delete the cloud account + synced data, AND wipe local data so
+      // nothing can resurface (e.g. by re-syncing up to a new account). The await
+      // runs first, so a failed server delete throws and leaves everything intact.
       deleteAccount: async () => {
         const session = get().session;
-        if (!session) return;
-        await deleteAccount(session.token);
-        set({ session: null });
+        if (session) await deleteAccount(session.token);
+        set({
+          session: null,
+          onboarded: false,
+          profile: DEFAULT_PROFILE,
+          logs: {},
+          periodStarts: [],
+          bookmarks: [],
+          supporterCode: null,
+        });
       },
 
       cloudSync: async (reconcile = false) => {
