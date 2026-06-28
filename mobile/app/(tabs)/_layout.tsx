@@ -15,7 +15,7 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: theme.color.text.secondary,
         tabBarLabelStyle: {
           fontSize: theme.font.size.xs,
-          fontWeight: theme.font.weight.medium,
+          fontWeight: theme.font.weight.medium as '500',
         },
         // Flat tab bar: solid bg, 1px top border, no shadow/elevation.
         tabBarStyle: {

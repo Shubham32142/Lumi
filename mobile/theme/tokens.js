@@ -15,22 +15,22 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 const color = {
-  // Primary — warm violet brand accent (one accent per screen)
+  // Primary — soft rose brand accent (one accent per screen)
   primary: {
-    light: '#EEEAFE',
-    base: '#7A5AF8',
-    dark: '#5B3FD6',
+    light: '#FBE4EC',
+    base: '#E0668E',
+    dark: '#C64F7C',
   },
 
-  // Neutral — grays for text, borders, backgrounds (50 lightest → 900 darkest)
+  // Neutral — warm taupe-grays for text, borders, backgrounds (50 → 900)
   neutral: {
-    50: '#FAFAFA',
-    100: '#F4F4F5',
-    200: '#E4E4E7',
-    300: '#D4D4D8',
-    500: '#71717A',
-    700: '#3F3F46',
-    900: '#18181B',
+    50: '#FBF6F5',
+    100: '#F5ECEA',
+    200: '#EADDD9',
+    300: '#DBC9C4',
+    500: '#998A8D',
+    700: '#57484C',
+    900: '#3B2F34',
   },
 
   // Status — semantic feedback only (contrast-safe on light backgrounds)
@@ -43,34 +43,37 @@ const color = {
   },
 
   // Surface — solid backgrounds (no transparency, no gradients)
+  //   app  = warm cream screen background (the feminine, un-clinical base)
+  //   page = white cards/inputs that sit on top of `app`
   surface: {
+    app: '#FFF7F5',
     page: '#FFFFFF',
-    muted: '#FAFAFA',
-    hover: '#F4F4F5',
+    muted: '#FBEFF2',
+    hover: '#F6E4EA',
   },
 
-  // Border — solid 1px separators
+  // Border — solid 1px separators (warm, low-contrast)
   border: {
-    default: '#E4E4E7',
-    input: '#D4D4D8',
+    default: '#EFE0DD',
+    input: '#E0CDC9',
   },
 
   // Text
   text: {
-    primary: '#18181B',
-    secondary: '#71717A',
-    label: '#3F3F46',
+    primary: '#3B2F34',
+    secondary: '#998A8D',
+    label: '#57484C',
     onPrimary: '#FFFFFF',
   },
 
   // Cycle phase accents — flat solid colors used for tags, dots, labels.
   // Each phase has a strong `base` (for text/borders/dots) and a soft `soft`
-  // (for tinted-but-solid backgrounds). Never gradients.
+  // (for tinted-but-solid backgrounds). Warm + feminine; never gradients.
   phase: {
-    flow: { base: '#E11D48', soft: '#FFE4E6' }, // 🩸 Menstruation — Flow Days
-    glow: { base: '#0D9488', soft: '#CCFBF1' }, // ✨ Follicular   — Glow Week
-    peak: { base: '#D97706', soft: '#FEF3C7' }, // 💫 Ovulation    — Peak Days
-    dip: { base: '#4F46E5', soft: '#E0E7FF' }, //  🌧️ Luteal/PMS   — The Dip
+    flow: { base: '#C84B72', soft: '#F8DCE6' }, // 🩸 Menstruation — Flow Days
+    glow: { base: '#E08A5B', soft: '#FBE6D8' }, // ✨ Follicular   — Glow Week
+    peak: { base: '#D29A3A', soft: '#F6EBCC' }, // 💫 Ovulation    — Peak Days
+    dip: { base: '#9B7BB8', soft: '#ECE2F4' }, //  🌧️ Luteal/PMS   — The Dip
   },
 };
 

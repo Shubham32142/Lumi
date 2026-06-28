@@ -3,69 +3,122 @@ import { View } from 'react-native';
 import { router } from 'expo-router';
 import { theme } from '@/theme';
 import { useStore } from '@/lib/store';
-import { PHASE_ORDER, phaseMeta } from '@/theme/phases';
-import { phaseInfoFor, upcomingPeriodStarts } from '@/lib/cycle';
-import { formatShort } from '@/lib/date';
-import { AppText, Card, Screen } from '@/components/ui';
+import { toast } from '@/lib/toast';
+import { isPredictedPeriodDay, upcomingPeriodStarts } from '@/lib/cycle';
+import { daysBetween, formatShort, todayISO } from '@/lib/date';
+import { AppText, Button, Card, Screen } from '@/components/ui';
 import { MonthCalendar, type Cursor, type DayMeta } from '@/components/MonthCalendar';
+import { CycleTimeline } from '@/components/CycleTimeline';
 
 export default function Calendar() {
   const profile = useStore((s) => s.profile);
   const logs = useStore((s) => s.logs);
+  const periodStarts = useStore((s) => s.periodStarts);
+  const logPeriodStart = useStore((s) => s.logPeriodStart);
+  const removePeriodStart = useStore((s) => s.removePeriodStart);
+
   const now = new Date();
   const [cursor, setCursor] = useState<Cursor>({ year: now.getFullYear(), monthIndex: now.getMonth() });
+  const [editing, setEditing] = useState(false);
 
+  const today = todayISO();
   const hasAnchor = Boolean(profile.lastPeriodDate);
 
+  // A day is "confirmed" period if it falls inside a logged period start's window.
+  function confirmedStartFor(iso: string): string | null {
+    for (const start of periodStarts) {
+      if (iso >= start && daysBetween(start, iso) < profile.periodLength) return start;
+    }
+    return null;
+  }
+
   function dayMeta(iso: string): DayMeta | undefined {
-    const info = phaseInfoFor(profile, iso);
-    if (!info) return logs[iso] ? { dot: true, accent: theme.color.primary.base } : undefined;
-    const meta = phaseMeta(info.phase);
-    return { soft: meta.soft, accent: meta.accent, dot: Boolean(logs[iso]) };
+    if (confirmedStartFor(iso)) return { period: 'confirmed' };
+    if (iso > today && isPredictedPeriodDay(profile, iso)) return { period: 'predicted' };
+    if (logs[iso]) return { logged: true };
+    return undefined;
+  }
+
+  function onSelectDay(iso: string) {
+    if (!editing) {
+      router.push(`/log?date=${iso}`);
+      return;
+    }
+    // Edit mode: tap to mark/unmark a period. Marking auto-fills the whole window.
+    const start = confirmedStartFor(iso);
+    if (start) {
+      removePeriodStart(start);
+      toast.info('Period removed');
+    } else {
+      logPeriodStart(iso);
+      toast.success(`Period set from ${formatShort(iso)} 🩸`);
+    }
   }
 
   const upcoming = upcomingPeriodStarts(profile, 3);
 
   return (
-    <Screen>
+    <Screen contentBottom={theme.space[4]}>
       <View style={{ paddingTop: theme.space[2], gap: theme.space[4] }}>
-        <AppText variant="h1">Your cycle calendar</AppText>
+        <AppText variant="h1">Your cycle</AppText>
 
         <Card>
           <MonthCalendar
             cursor={cursor}
             onCursorChange={setCursor}
             dayMeta={dayMeta}
-            onSelectDay={(iso) => router.push(`/log?date=${iso}`)}
+            onSelectDay={onSelectDay}
+            disableFuture={editing}
           />
-        </Card>
 
-        {/* Legend */}
-        <Card>
-          <AppText variant="label" style={{ marginBottom: theme.space[2] }}>Phases</AppText>
-          <View className="flex-row flex-wrap" style={{ gap: theme.space[2] }}>
-            {PHASE_ORDER.map((p) => {
-              const m = phaseMeta(p);
-              return (
-                <View key={p} className="flex-row items-center" style={{ gap: theme.space[1] }}>
-                  <View
-                    className="rounded-sm border"
-                    style={{ width: 14, height: 14, backgroundColor: m.soft, borderColor: m.accent }}
-                  />
-                  <AppText variant="caption">{m.emoji} {m.name}</AppText>
-                </View>
-              );
-            })}
-            <View className="flex-row items-center" style={{ gap: theme.space[1] }}>
-              <View className="rounded-full bg-primary" style={{ width: 6, height: 6 }} />
-              <AppText variant="caption">• logged day</AppText>
-            </View>
+          {/* Legend */}
+          <View
+            className="flex-row flex-wrap"
+            style={{ gap: theme.space[3], marginTop: theme.space[3] }}
+          >
+            <Legend kind="confirmed" label="Period" />
+            <Legend kind="predicted" label="Predicted" />
+            <Legend kind="logged" label="You logged" />
           </View>
         </Card>
 
+        {/* Edit period dates (Flo-style) */}
+        {editing ? (
+          <Card>
+            <View style={{ gap: theme.space[2] }}>
+              <AppText variant="label">Editing period dates</AppText>
+              <AppText variant="secondary">
+                Tap the day your period started — we'll fill in the next {profile.periodLength} days.
+                Tap a period day again to remove it.
+              </AppText>
+              <Button title="Done" onPress={() => setEditing(false)} />
+            </View>
+          </Card>
+        ) : (
+          <Button title="Edit period dates 🩸" variant="secondary" onPress={() => setEditing(true)} />
+        )}
+
+        {/* Where am I in my cycle? */}
+        {hasAnchor ? (
+          <View style={{ gap: theme.space[3] }}>
+            <AppText variant="h2">Where you are now</AppText>
+            <CycleTimeline profile={profile} />
+          </View>
+        ) : (
+          <Card>
+            <AppText variant="secondary">
+              Tap “Edit period dates” and mark when your last period began — your phases and
+              predictions will appear here.
+            </AppText>
+          </Card>
+        )}
+
+        {/* Predictions */}
         {hasAnchor ? (
           <Card>
-            <AppText variant="label" style={{ marginBottom: theme.space[2] }}>Next predicted periods</AppText>
+            <AppText variant="label" style={{ marginBottom: theme.space[2] }}>
+              Next predicted periods
+            </AppText>
             <View style={{ gap: theme.space[1] }}>
               {upcoming.map((iso) => (
                 <AppText key={iso} variant="body">🩸 {formatShort(iso)}</AppText>
@@ -77,16 +130,28 @@ export default function Calendar() {
               </AppText>
             ) : null}
           </Card>
-        ) : (
-          <Card>
-            <AppText variant="secondary">
-              Log a period start (from Today or Settings) to see your phases mapped here.
-            </AppText>
-          </Card>
-        )}
-
-        <AppText variant="caption">Tap any day to log or edit how you felt.</AppText>
+        ) : null}
       </View>
     </Screen>
+  );
+}
+
+function Legend({ kind, label }: { kind: 'confirmed' | 'predicted' | 'logged'; label: string }) {
+  const rose = theme.color.primary.base;
+  const dot =
+    kind === 'confirmed' ? (
+      <View style={{ width: 9, height: 9, borderRadius: 999, backgroundColor: rose }} />
+    ) : kind === 'predicted' ? (
+      <View
+        style={{ width: 9, height: 9, borderRadius: 999, borderWidth: 1.5, borderColor: rose }}
+      />
+    ) : (
+      <View style={{ width: 6, height: 6, borderRadius: 999, backgroundColor: theme.color.text.secondary }} />
+    );
+  return (
+    <View className="flex-row items-center" style={{ gap: theme.space[1] }}>
+      {dot}
+      <AppText variant="caption">{label}</AppText>
+    </View>
   );
 }

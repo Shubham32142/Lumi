@@ -25,6 +25,7 @@ module.exports = {
         warning: theme.color.status.warning,
         info: theme.color.status.info,
         // surfaces
+        app: theme.color.surface.app,
         page: theme.color.surface.page,
         muted: theme.color.surface.muted,
         hover: theme.color.surface.hover,

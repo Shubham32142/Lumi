@@ -8,7 +8,14 @@ import type { CycleLog, Profile, SymptomKey } from '@/lib/types';
 import { estimateCycleLength } from '@/lib/cycle';
 import { addDays, todayISO } from '@/lib/date';
 import { DEFAULT_AI_CONFIG, type AiConfig } from '@/lib/ai/providers';
-import { getLogs, getProfile, putLog, putProfile, type ProfileSync } from '@/lib/api';
+import {
+  deleteAccount,
+  getLogs,
+  getProfile,
+  putLog,
+  putProfile,
+  type ProfileSync,
+} from '@/lib/api';
 
 export const DEFAULT_TRACKED: SymptomKey[] = [
   'mood',
@@ -82,10 +89,12 @@ interface AppState {
   upsertLog: (date: string, patch: Partial<CycleLog>) => void;
   getLog: (date: string) => CycleLog | undefined;
   logPeriodStart: (date: string) => void;
+  removePeriodStart: (date: string) => void;
   toggleBookmark: (id: string) => void;
   setAiConfig: (patch: Partial<AiConfig>) => void;
   setSession: (session: Session) => void;
   clearSession: () => void;
+  deleteAccount: () => Promise<void>;
   cloudSync: (reconcile?: boolean) => Promise<void>;
   loggedDatesDescending: () => string[];
   currentStreak: () => number;
@@ -122,9 +131,9 @@ export const useStore = create<AppState>()(
         set((s) => {
           const existing = s.logs[date];
           const merged: CycleLog = {
-            date,
             ...existing,
             ...patch,
+            date,
             updatedAt: new Date().toISOString(),
           };
           return { logs: { ...s.logs, [date]: merged } };
@@ -153,6 +162,24 @@ export const useStore = create<AppState>()(
         if (s.session) pushProfileUp(s.session.token, s);
       },
 
+      removePeriodStart: (date) => {
+        set((s) => {
+          if (!s.periodStarts.includes(date)) return s;
+          const starts = s.periodStarts.filter((d) => d !== date);
+          const learned = estimateCycleLength(starts, s.profile.cycleLength);
+          return {
+            periodStarts: starts,
+            profile: {
+              ...s.profile,
+              lastPeriodDate: starts.length ? starts[starts.length - 1] : null,
+              cycleLength: learned,
+            },
+          };
+        });
+        const s = get();
+        if (s.session) pushProfileUp(s.session.token, s);
+      },
+
       toggleBookmark: (id) => {
         set((s) => ({
           bookmarks: s.bookmarks.includes(id)
@@ -169,6 +196,15 @@ export const useStore = create<AppState>()(
 
       // Logging out keeps local data on the device; only the cloud link is dropped.
       clearSession: () => set({ session: null }),
+
+      // Permanently delete the cloud account + synced data, then drop the session.
+      // Local on-device data is left intact (use resetAll to wipe the device too).
+      deleteAccount: async () => {
+        const session = get().session;
+        if (!session) return;
+        await deleteAccount(session.token);
+        set({ session: null });
+      },
 
       cloudSync: async (reconcile = false) => {
         const session = get().session;

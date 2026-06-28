@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Alert, Pressable, Share, Switch, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 import { Minus, Plus } from 'lucide-react-native';
@@ -7,7 +6,6 @@ import { useStore } from '@/lib/store';
 import type { SymptomKey } from '@/lib/types';
 import { formatLong, todayISO } from '@/lib/date';
 import { SYMPTOM_CONFIG } from '@/lib/symptoms';
-import { signup, login, ApiError } from '@/lib/api';
 import { toast } from '@/lib/toast';
 import { PROVIDERS, PROVIDER_OPTIONS, type ProviderId } from '@/lib/ai/providers';
 import { AppText, Button, Card, ChoiceChip, Divider, Screen, Select } from '@/components/ui';
@@ -32,20 +30,10 @@ export default function Settings() {
   const aiConfig = useStore((s) => s.aiConfig);
   const setAiConfig = useStore((s) => s.setAiConfig);
   const session = useStore((s) => s.session);
-  const setSession = useStore((s) => s.setSession);
   const clearSession = useStore((s) => s.clearSession);
+  const deleteAccount = useStore((s) => s.deleteAccount);
   const cloudSync = useStore((s) => s.cloudSync);
   const syncing = useStore((s) => s.syncing);
-  const snapshot = useStore((s) => ({
-    profile: s.profile,
-    logs: s.logs,
-    periodStarts: s.periodStarts,
-    bookmarks: s.bookmarks,
-  }));
-
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [creating, setCreating] = useState(false);
 
   function toggleTracked(key: SymptomKey) {
     const has = profile.trackedSymptoms.includes(key);
@@ -57,11 +45,22 @@ export default function Settings() {
   }
 
   async function exportData() {
-    const payload = JSON.stringify({ ...snapshot, exportedAt: new Date().toISOString() }, null, 2);
+    const s = useStore.getState();
+    const payload = JSON.stringify(
+      {
+        profile: s.profile,
+        logs: s.logs,
+        periodStarts: s.periodStarts,
+        bookmarks: s.bookmarks,
+        exportedAt: new Date().toISOString(),
+      },
+      null,
+      2,
+    );
     try {
       await Share.share({ message: payload });
     } catch {
-      Alert.alert('Export', "Couldn't open the share sheet on this device.");
+      toast.error("Couldn't open the share sheet on this device.");
     }
   }
 
@@ -83,36 +82,31 @@ export default function Settings() {
     );
   }
 
-  async function authenticate(kind: 'signup' | 'login') {
-    if (!email.trim() || password.length < 8) {
-      toast.error('Enter an email and a password of at least 8 characters.');
-      return;
-    }
-    setCreating(true);
-    try {
-      const res =
-        kind === 'signup'
-          ? await signup(email.trim(), password)
-          : await login(email.trim(), password);
-      setSession({ token: res.token, userId: res.userId, email: email.trim() });
-      setEmail('');
-      setPassword('');
-      toast.success(kind === 'signup' ? 'Account created — backing up ☁️' : 'Logged in 🎉');
-      cloudSync(true).catch(() => {});
-    } catch (e) {
-      toast.error(
-        e instanceof ApiError
-          ? e.message
-          : 'Could not reach the server. You can keep using local mode.',
-      );
-    } finally {
-      setCreating(false);
-    }
-  }
-
   function logout() {
     clearSession();
     toast.info('Logged out — your data stays on this device.');
+  }
+
+  function confirmDeleteAccount() {
+    Alert.alert(
+      'Delete account?',
+      'This permanently deletes your cloud account and all synced data. This cannot be undone. Your data on this device will stay.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete account',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteAccount();
+              toast.success('Account deleted.');
+            } catch {
+              toast.error('Could not delete the account — check your connection.');
+            }
+          },
+        },
+      ],
+    );
   }
 
   async function syncNow() {
@@ -360,50 +354,26 @@ export default function Settings() {
                   onPress={syncNow}
                 />
                 <Button title="Log out" variant="secondary" onPress={logout} />
+                <Divider />
+                <Button title="Delete account" variant="danger" onPress={confirmDeleteAccount} />
+                <AppText variant="caption">
+                  Permanently removes your cloud account and synced data. Your data on this device
+                  stays unless you also delete it below.
+                </AppText>
               </View>
             ) : (
-              <>
+              <View style={{ gap: theme.space[3] }}>
                 <AppText variant="body">
-                  You're in local mode — everything lives on this device. Create an account (or log
-                  in) for cloud backup and sync across devices. Your AI key always stays local. (Optional.)
+                  You're in local mode — everything lives on this device. Create an account for cloud
+                  backup and sync across devices. Your AI key always stays local. (Optional.)
                 </AppText>
-                <Divider />
-                <View style={{ gap: theme.space[2] }}>
-                  <AppText variant="label">Email</AppText>
-                  <TextInput
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    keyboardType="email-address"
-                    placeholder="you@example.com"
-                    placeholderTextColor={theme.color.text.secondary}
-                    className="rounded-md border border-line-input bg-page px-3 text-base text-ink"
-                    style={{ height: theme.size.inputH }}
-                  />
-                  <AppText variant="label">Password</AppText>
-                  <TextInput
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                    placeholder="At least 8 characters"
-                    placeholderTextColor={theme.color.text.secondary}
-                    className="rounded-md border border-line-input bg-page px-3 text-base text-ink"
-                    style={{ height: theme.size.inputH }}
-                  />
-                  <Button
-                    title={creating ? 'Please wait…' : 'Create account'}
-                    disabled={creating}
-                    onPress={() => authenticate('signup')}
-                  />
-                  <Button
-                    title="Log in"
-                    variant="secondary"
-                    disabled={creating}
-                    onPress={() => authenticate('login')}
-                  />
-                </View>
-              </>
+                <Button title="Create account" onPress={() => router.push('/auth?mode=signup')} />
+                <Button
+                  title="Log in"
+                  variant="secondary"
+                  onPress={() => router.push('/auth?mode=login')}
+                />
+              </View>
             )}
           </Card>
         </Section>

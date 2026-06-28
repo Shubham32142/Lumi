@@ -26,7 +26,7 @@ export function Screen({ children, scroll = true, contentBottom = 0 }: ScreenPro
   if (!scroll) {
     return (
       <View
-        className="flex-1 bg-page"
+        className="flex-1 bg-app"
         style={{ paddingTop: insets.top + theme.space[2] }}
       >
         {inner}

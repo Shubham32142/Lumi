@@ -116,6 +116,55 @@ export function isPredictedPeriodDay(profile: Profile, onDate: string): boolean 
   return day <= profile.periodLength;
 }
 
+export interface PhaseRange {
+  phase: Phase;
+  startDay: number; // 1-indexed cycle day
+  endDay: number;
+  startISO: string;
+  endISO: string;
+}
+
+/**
+ * The four phase windows (with calendar dates) for the cycle that contains
+ * `onDate`. Boundaries follow `phaseForDay`, so they scale with cycle length.
+ * Returns null when there's no anchor date yet.
+ */
+export function cyclePhaseRanges(
+  profile: Profile,
+  onDate: string = todayISO(),
+): PhaseRange[] | null {
+  const day = dayOfCycle(profile, onDate);
+  if (day == null) return null;
+  const cycleStart = addDays(onDate, -(day - 1));
+  const L = profile.cycleLength;
+  const P = profile.periodLength;
+  const ovDay = Math.max(P + 1, L - LUTEAL_LENGTH);
+
+  const windows: { phase: Phase; startDay: number; endDay: number }[] = [
+    { phase: 'menstruation', startDay: 1, endDay: P },
+    { phase: 'follicular', startDay: P + 1, endDay: ovDay - 2 },
+    { phase: 'ovulation', startDay: ovDay - 1, endDay: ovDay + 1 },
+    { phase: 'luteal', startDay: ovDay + 2, endDay: L },
+  ];
+
+  return windows
+    .filter((w) => w.endDay >= w.startDay)
+    .map((w) => ({
+      phase: w.phase,
+      startDay: w.startDay,
+      endDay: w.endDay,
+      startISO: addDays(cycleStart, w.startDay - 1),
+      endISO: addDays(cycleStart, w.endDay - 1),
+    }));
+}
+
+/** ISO date of the start of the cycle that contains `onDate` (day 1). */
+export function cycleStartOf(profile: Profile, onDate: string = todayISO()): string | null {
+  const day = dayOfCycle(profile, onDate);
+  if (day == null) return null;
+  return addDays(onDate, -(day - 1));
+}
+
 /**
  * Learn cycle length from logged period-start dates. Averages the gaps between
  * consecutive starts; falls back to `fallback` when there isn't enough history.

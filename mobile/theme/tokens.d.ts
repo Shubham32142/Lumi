@@ -12,7 +12,7 @@ export interface Theme {
       warning: string;
       info: string;
     };
-    surface: { page: string; muted: string; hover: string };
+    surface: { app: string; page: string; muted: string; hover: string };
     border: { default: string; input: string };
     text: { primary: string; secondary: string; label: string; onPrimary: string };
     phase: Record<PhaseKey, { base: string; soft: string }>;

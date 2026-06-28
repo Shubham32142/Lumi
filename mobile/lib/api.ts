@@ -72,4 +72,9 @@ export function putLog(token: string, log: CycleLog): Promise<{ log: CycleLog }>
   return request<{ log: CycleLog }>('POST', '/api/logs', log, token);
 }
 
+// ── Account ──
+export function deleteAccount(token: string): Promise<{ ok: boolean }> {
+  return request<{ ok: boolean }>('DELETE', '/api/account', undefined, token);
+}
+
 export { BASE_URL };

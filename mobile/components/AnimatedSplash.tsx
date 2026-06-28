@@ -118,7 +118,7 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
 
 const styles = StyleSheet.create({
   root: {
-    backgroundColor: theme.color.surface.page,
+    backgroundColor: theme.color.surface.app,
     alignItems: 'center',
     justifyContent: 'center',
   },

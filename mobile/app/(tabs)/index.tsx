@@ -160,6 +160,7 @@ function PhaseCard({ phase, dayOfCycle }: { phase: Phase; dayOfCycle: number }) 
     <Card roomy>
       <View style={{ gap: theme.space[3] }}>
         <PhaseBadge phase={phase} dayOfCycle={dayOfCycle} />
+        <AppText variant="secondary">{meta.definition}</AppText>
         <AppText variant="h3">{meta.tagline}</AppText>
         <View
           className="rounded-md border p-3"
@@ -172,11 +173,18 @@ function PhaseCard({ phase, dayOfCycle }: { phase: Phase; dayOfCycle: number }) 
             {why}
           </AppText>
         </View>
-        <Button
-          title="Learn more about this phase"
-          variant="secondary"
-          onPress={() => router.push('/learn')}
-        />
+        <View style={{ gap: theme.space[2] }}>
+          <Button
+            title="See where you are in your cycle"
+            variant="secondary"
+            onPress={() => router.push('/calendar')}
+          />
+          <Button
+            title="Learn more about this phase"
+            variant="secondary"
+            onPress={() => router.push('/learn')}
+          />
+        </View>
       </View>
     </Card>
   );

@@ -110,6 +110,15 @@ export default function Onboarding() {
               what you feel — and what actually helps. 💜
             </AppText>
           </Card>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/auth?mode=login')}
+            className="items-center py-2 active:opacity-70"
+          >
+            <AppText variant="bodySm" style={{ color: theme.color.primary.base }}>
+              Already have an account? Log in
+            </AppText>
+          </Pressable>
         </StepShell>
       )}
 
@@ -263,10 +272,15 @@ export default function Onboarding() {
           body="You can use everything right now — no account needed. Your data stays on this device.">
           <Card roomy>
             <AppText variant="body">
-              Want cloud backup, Luna's memory across devices, and partner mode? Create an
-              account later from Settings (email + password, nothing else). For now, jump in.
+              Want cloud backup and sync across devices? Create an account — email + password,
+              nothing else. Or skip it and jump straight in.
             </AppText>
           </Card>
+          <Button
+            title="Create an account (optional)"
+            variant="secondary"
+            onPress={() => router.push('/auth?mode=signup')}
+          />
         </StepShell>
       )}
 

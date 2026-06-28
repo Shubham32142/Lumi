@@ -36,12 +36,16 @@ export default function RootLayout() {
           <Stack
             screenOptions={{
               headerShown: false,
-              contentStyle: { backgroundColor: theme.color.surface.page },
+              contentStyle: { backgroundColor: theme.color.surface.app },
               animation: 'fade',
             }}
           >
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="onboarding" />
+            <Stack.Screen
+              name="auth"
+              options={{ headerShown: true, title: 'Account', presentation: 'modal' }}
+            />
             <Stack.Screen name="settings" options={{ headerShown: true, title: 'Settings', presentation: 'card' }} />
             <Stack.Screen name="partner" options={{ headerShown: true, title: 'Partner View' }} />
             <Stack.Screen name="insights" options={{ headerShown: true, title: 'Insights' }} />
