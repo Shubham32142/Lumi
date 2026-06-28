@@ -1,111 +1,219 @@
-import { View } from 'react-native';
+// The supporter experience. Two modes share this screen:
+//  - SUPPORTER (logged in with a partner code): reads her shared snapshot from
+//    the cloud and teaches them how to show up.
+//  - PREVIEW (the owner, from Settings): shows the same thing from local data,
+//    so she sees exactly what her partner sees.
+// It does more than "be nice": what's happening, how to help today, what to
+// avoid, and why understanding this helps them both.
+import { useEffect } from 'react';
+import { Pressable, View } from 'react-native';
 import { router } from 'expo-router';
-import { toast } from '@/lib/toast';
-import { Heart } from 'lucide-react-native';
+import { Heart, Settings as SettingsIcon } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { useStore } from '@/lib/store';
-import { phaseMeta } from '@/theme/phases';
-import { phaseInfoFor } from '@/lib/cycle';
+import { toast } from '@/lib/toast';
+import type { Phase } from '@/lib/types';
+import { phaseColors, phaseMeta } from '@/theme/phases';
+import { daysUntilNextPeriod, phaseInfoFor } from '@/lib/cycle';
 import { todayISO } from '@/lib/date';
+import { PARTNER_GUIDE } from '@/content/partner';
 import { SYMPTOM_CONFIG } from '@/lib/symptoms';
-import { PARTNER_TIPS } from '@/content/partner';
 import { AppText, Button, Card, Screen, Tag } from '@/components/ui';
-import { PhaseBadge } from '@/components/PhaseBadge';
 
-function optionLabel(group: 'mood' | 'energy', value: string): string {
-  const opt = SYMPTOM_CONFIG[group].options.find((o) => o.value === value);
-  return opt ? `${opt.emoji} ${opt.label}` : value;
+function optLabel(group: 'mood' | 'energy', value: string | null): string | null {
+  if (!value) return null;
+  return SYMPTOM_CONFIG[group].options.find((o) => o.value === value)?.label ?? value;
 }
 
 export default function Partner() {
   const theme = useTheme();
+  const supporterCode = useStore((s) => s.supporterCode);
   const profile = useStore((s) => s.profile);
-  const todayLog = useStore((s) => s.logs[todayISO()]);
+  const logs = useStore((s) => s.logs);
+  const snapshot = useStore((s) => s.partnerSnapshot);
+  const refreshPartner = useStore((s) => s.refreshPartner);
+
+  const isSupporter = Boolean(supporterCode);
+
+  useEffect(() => {
+    if (isSupporter) void refreshPartner();
+  }, [isSupporter, refreshPartner]);
+
+  // Resolve the state depending on mode.
+  const info = !isSupporter ? phaseInfoFor(profile) : null;
   const sharing = profile.partnerSharing;
 
-  const info = phaseInfoFor(profile);
+  const phase: Phase | null = isSupporter
+    ? snapshot?.enabled
+      ? ((snapshot.phase as Phase) ?? null)
+      : null
+    : info?.phase ?? null;
 
-  if (!sharing.enabled) {
-    return (
-      <Screen>
-        <View style={{ paddingTop: theme.space[2], gap: theme.space[3] }}>
-          <AppText variant="h1">Partner View</AppText>
-          <Card roomy>
-            <AppText variant="body">
-              Partner sharing is off right now. Turn it on in Settings to share a simple,
-              respectful snapshot. You choose exactly what's visible.
-            </AppText>
-          </Card>
-          <Button title="Open sharing settings" onPress={() => router.push('/settings')} />
-        </View>
-      </Screen>
-    );
-  }
+  const mood = isSupporter
+    ? snapshot?.today?.mood ?? null
+    : sharing.shareMood
+      ? logs[todayISO()]?.mood ?? null
+      : null;
+  const energy = isSupporter
+    ? snapshot?.today?.energy ?? null
+    : sharing.shareEnergy
+      ? logs[todayISO()]?.energy ?? null
+      : null;
+  const daysUntil = isSupporter
+    ? snapshot?.daysUntilNextPeriod ?? null
+    : info
+      ? daysUntilNextPeriod(profile)
+      : null;
+
+  const notLoaded = isSupporter && (!snapshot || !snapshot.linked);
+  const sharingPaused = isSupporter && Boolean(snapshot?.linked) && snapshot?.enabled === false;
+
+  const guide = phase ? PARTNER_GUIDE[phase] : null;
+  const meta = phase ? phaseMeta(phase) : null;
+  const colors = phase ? phaseColors(theme.color, phase) : null;
+  const PhaseIcon = meta?.icon;
 
   return (
-    <Screen>
+    <Screen contentBottom={theme.space[8]}>
       <View style={{ paddingTop: theme.space[2], gap: theme.space[4] }}>
-        <View style={{ gap: theme.space[1] }}>
-          <AppText variant="secondary">This is what your partner sees</AppText>
-          <AppText variant="h1">Today, at a glance</AppText>
+        <View className="flex-row items-start justify-between">
+          <View style={{ gap: theme.space[1], flex: 1 }}>
+            <AppText variant="secondary">
+              {isSupporter ? 'You are supporting' : 'What your partner sees'}
+            </AppText>
+            <AppText variant="h1">Today, at a glance</AppText>
+          </View>
+          {isSupporter ? (
+            <Pressable
+              onPress={() => router.push('/settings')}
+              accessibilityRole="button"
+              accessibilityLabel="Settings"
+              className="rounded-md p-1 active:bg-hover"
+            >
+              <SettingsIcon size={theme.size.iconLg} color={theme.color.text.secondary} />
+            </Pressable>
+          ) : null}
         </View>
 
-        {info ? (
-          <Card roomy>
+        {notLoaded ? (
+          <Card>
             <View style={{ gap: theme.space[3] }}>
-              <PhaseBadge phase={info.phase} />
-              <AppText variant="body">{phaseMeta(info.phase).tagline}</AppText>
+              <AppText variant="body">We couldn't load their cycle right now.</AppText>
+              <Button title="Try again" variant="secondary" onPress={() => void refreshPartner()} />
             </View>
+          </Card>
+        ) : sharingPaused ? (
+          <Card>
+            <AppText variant="secondary">
+              They've paused sharing for now. You'll see updates when they turn it back on.
+            </AppText>
+          </Card>
+        ) : !phase || !guide || !meta || !colors ? (
+          <Card>
+            <AppText variant="secondary">
+              No cycle data shared yet. Once they log a period start, their phase shows here.
+            </AppText>
           </Card>
         ) : (
-          <Card>
-            <AppText variant="secondary">No cycle data shared yet.</AppText>
-          </Card>
-        )}
+          <>
+            {/* Where she is now */}
+            <Card roomy>
+              <View style={{ gap: theme.space[3] }}>
+                <View
+                  className="flex-row items-center self-start rounded-md border px-3 py-2"
+                  style={{ backgroundColor: colors.soft, borderColor: colors.accent, gap: theme.space[2] }}
+                >
+                  {PhaseIcon ? <PhaseIcon size={theme.size.iconMd} color={colors.accent} /> : null}
+                  <AppText variant="title" style={{ color: colors.accent }}>
+                    {meta.name}
+                  </AppText>
+                </View>
+                {daysUntil != null ? (
+                  <AppText variant="secondary">
+                    {daysUntil <= 0
+                      ? 'Her period may start any day now.'
+                      : `About ${daysUntil} days until her period.`}
+                  </AppText>
+                ) : null}
+                {mood || energy ? (
+                  <View className="flex-row flex-wrap" style={{ gap: theme.space[2] }}>
+                    {mood ? <Tag label={`Mood: ${optLabel('mood', mood)}`} /> : null}
+                    {energy ? <Tag label={`Energy: ${optLabel('energy', energy)}`} /> : null}
+                  </View>
+                ) : null}
+              </View>
+            </Card>
 
-        {/* Mood & energy — only if shared */}
-        {(sharing.shareMood || sharing.shareEnergy) && todayLog ? (
-          <Card>
-            <AppText variant="label" style={{ marginBottom: theme.space[2] }}>How she's feeling</AppText>
-            <View className="flex-row flex-wrap" style={{ gap: theme.space[2] }}>
-              {sharing.shareMood && todayLog.mood ? (
-                <Tag label={optionLabel('mood', todayLog.mood)} />
-              ) : null}
-              {sharing.shareEnergy && todayLog.energy ? (
-                <Tag label={`Energy: ${optionLabel('energy', todayLog.energy)}`} />
-              ) : null}
-              {!todayLog.mood && !todayLog.energy ? (
-                <AppText variant="secondary">Nothing logged yet today.</AppText>
-              ) : null}
+            <GuideCard title="What's happening">
+              <AppText variant="body">{guide.whatsHappening}</AppText>
+            </GuideCard>
+
+            <GuideCard title="How to show up today">
+              <View style={{ gap: theme.space[3] }}>
+                {guide.support.map((a, i) => (
+                  <View key={i} className="flex-row items-start" style={{ gap: theme.space[3] }}>
+                    <View
+                      style={{ width: 7, height: 7, borderRadius: 999, backgroundColor: colors.accent, marginTop: 7 }}
+                    />
+                    <View style={{ flex: 1 }}>
+                      <AppText
+                        variant="bodySm"
+                        style={{ color: theme.color.text.primary, fontFamily: theme.font.family.sansSemibold }}
+                      >
+                        {a.text}
+                      </AppText>
+                      {a.detail ? <AppText variant="secondary">{a.detail}</AppText> : null}
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </GuideCard>
+
+            <GuideCard title="What not to do">
+              <View style={{ gap: theme.space[2] }}>
+                {guide.avoid.map((t, i) => (
+                  <AppText key={i} variant="body">
+                    • {t}
+                  </AppText>
+                ))}
+              </View>
+            </GuideCard>
+
+            <View className="rounded-lg" style={{ backgroundColor: colors.soft, padding: theme.space[4] }}>
+              <AppText variant="label" style={{ color: colors.accent, marginBottom: theme.space[1] }}>
+                WHY THIS HELPS YOU BOTH
+              </AppText>
+              <AppText variant="body" className="text-ink">
+                {guide.relationship}
+              </AppText>
             </View>
-          </Card>
-        ) : null}
 
-        {/* Support tips */}
-        {info ? (
-          <Card roomy>
-            <AppText variant="label" style={{ marginBottom: theme.space[2] }}>
-              How to support her today
+            <Button
+              title="Send love"
+              icon={<Heart size={theme.size.iconSm} color={theme.color.text.onPrimary} />}
+              onPress={() => toast.success('Sent. They will feel the love.')}
+            />
+
+            <AppText variant="caption">
+              {isSupporter
+                ? 'You only see what they choose to share.'
+                : 'Partners only see what you switch on in Settings.'}
             </AppText>
-            <View style={{ gap: theme.space[3] }}>
-              {PARTNER_TIPS[info.phase].map((tip, i) => (
-                <AppText key={i} variant="body">• {tip}</AppText>
-              ))}
-            </View>
-          </Card>
-        ) : null}
-
-        <Button
-          title="Send love"
-          icon={<Heart size={theme.size.iconSm} color={theme.color.text.onPrimary} />}
-          onPress={() => toast.success('Sent. Your person will feel the love.')}
-        />
-
-        <AppText variant="caption">
-          Partners never see symptom details, history, or your chats with Luna unless you turn
-          those on. You're in control.
-        </AppText>
+          </>
+        )}
       </View>
     </Screen>
+  );
+}
+
+function GuideCard({ title, children }: { title: string; children: React.ReactNode }) {
+  const theme = useTheme();
+  return (
+    <Card>
+      <View style={{ gap: theme.space[2] }}>
+        <AppText variant="label">{title}</AppText>
+        {children}
+      </View>
+    </Card>
   );
 }

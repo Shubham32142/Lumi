@@ -5,6 +5,7 @@ import {
   Bell,
   Bot,
   Heart,
+  HeartHandshake,
   ListChecks,
   Minus,
   Moon,
@@ -22,6 +23,7 @@ import { useStore } from '@/lib/store';
 import type { SymptomKey } from '@/lib/types';
 import { formatLong, todayISO } from '@/lib/date';
 import { SYMPTOM_CONFIG } from '@/lib/symptoms';
+import { ApiError } from '@/lib/api';
 import { toast } from '@/lib/toast';
 import { PROVIDERS, PROVIDER_OPTIONS, type ProviderId } from '@/lib/ai/providers';
 import { AppText, Button, Card, ChoiceChip, Divider, Screen, Select } from '@/components/ui';
@@ -60,18 +62,43 @@ export default function Settings() {
   const themeMode = useThemeStore((s) => s.mode);
   const setThemeMode = useThemeStore((s) => s.setMode);
   const supporterCode = useStore((s) => s.supporterCode);
-  const becomeSupporter = useStore((s) => s.becomeSupporter);
+  const linkPartner = useStore((s) => s.linkPartner);
+  const unlinkPartner = useStore((s) => s.unlinkPartner);
   const [codeInput, setCodeInput] = useState('');
+  const [connecting, setConnecting] = useState(false);
 
-  function connectSupporter() {
+  async function connectSupporter() {
     if (!codeInput.trim()) {
       toast.error('Enter the code your partner shared with you.');
       return;
     }
-    becomeSupporter(codeInput.trim());
-    setCodeInput('');
-    toast.success('Connected. Opening their support view.');
-    router.push('/partner');
+    setConnecting(true);
+    try {
+      await linkPartner(codeInput.trim());
+      setCodeInput('');
+      toast.success('Connected. Opening their support view.');
+      router.replace('/partner');
+    } catch (e) {
+      toast.error(
+        e instanceof ApiError ? e.message : 'Could not connect. Check the code and your connection.',
+      );
+    } finally {
+      setConnecting(false);
+    }
+  }
+
+  function confirmUnlink() {
+    Alert.alert('Stop supporting?', 'You will no longer see their cycle. You can reconnect anytime.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Stop supporting',
+        style: 'destructive',
+        onPress: async () => {
+          await unlinkPartner();
+          router.replace('/welcome');
+        },
+      },
+    ]);
   }
 
   function toggleTracked(key: SymptomKey) {
@@ -165,6 +192,21 @@ export default function Settings() {
   return (
     <Screen contentBottom={theme.space[8]}>
       <View style={{ paddingTop: theme.space[2], gap: theme.space[6] }}>
+        {/* ── Supporter mode ── */}
+        {supporterCode ? (
+          <Section title="Supporting someone" icon={HeartHandshake}>
+            <Card>
+              <View style={{ gap: theme.space[3] }}>
+                <AppText variant="body">
+                  You're connected to support someone with their cycle.
+                </AppText>
+                <Button title="Open support view" onPress={() => router.replace('/partner')} />
+                <Button title="Stop supporting" variant="danger" onPress={confirmUnlink} />
+              </View>
+            </Card>
+          </Section>
+        ) : null}
+
         {/* ── Luna & AI ── */}
         <Section title="Luna & AI" icon={Bot}>
           <Card>
@@ -431,7 +473,12 @@ export default function Settings() {
                 className="rounded-md border border-line-input bg-page px-3 text-base text-ink"
                 style={{ height: theme.size.inputH }}
               />
-              <Button title="Connect" variant="secondary" onPress={connectSupporter} />
+              <Button
+                title={connecting ? 'Connecting…' : 'Connect'}
+                disabled={connecting}
+                variant="secondary"
+                onPress={connectSupporter}
+              />
             </View>
           </Card>
         </Section>

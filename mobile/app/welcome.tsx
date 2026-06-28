@@ -8,22 +8,34 @@ import { ChevronRight, HeartHandshake, User, type LucideIcon } from 'lucide-reac
 import { useTheme } from '@/theme';
 import { useStore } from '@/lib/store';
 import { toast } from '@/lib/toast';
+import { ApiError } from '@/lib/api';
 import { AppText, Button, Card, Screen } from '@/components/ui';
 import { Logo } from '@/components/Logo';
 
 export default function Welcome() {
   const theme = useTheme();
-  const becomeSupporter = useStore((s) => s.becomeSupporter);
+  const linkPartner = useStore((s) => s.linkPartner);
   const [step, setStep] = useState<'choose' | 'code'>('choose');
   const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
 
-  function joinAsSupporter() {
+  async function joinAsSupporter() {
     if (!code.trim()) {
       toast.error('Enter the code your partner shared with you.');
       return;
     }
-    becomeSupporter(code.trim());
-    router.replace('/partner');
+    setBusy(true);
+    try {
+      await linkPartner(code.trim());
+      toast.success('Connected. Here is how to support them.');
+      router.replace('/partner');
+    } catch (e) {
+      toast.error(
+        e instanceof ApiError ? e.message : 'Could not connect. Check the code and your connection.',
+      );
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -66,7 +78,7 @@ export default function Welcome() {
                 className="rounded-md border border-line-input bg-page px-3 text-base text-ink"
                 style={{ height: theme.size.inputH }}
               />
-              <Button title="Continue" onPress={joinAsSupporter} />
+              <Button title={busy ? 'Connecting…' : 'Continue'} disabled={busy} onPress={joinAsSupporter} />
               <Button title="Back" variant="secondary" onPress={() => setStep('choose')} />
             </View>
           </Card>

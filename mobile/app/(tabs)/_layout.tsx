@@ -7,10 +7,13 @@ export default function TabsLayout() {
   const theme = useTheme();
   const session = useStore((s) => s.session);
   const onboarded = useStore((s) => s.onboarded);
+  const supporterCode = useStore((s) => s.supporterCode);
   const hasAiKey = useStore((s) => s.aiConfig.apiKey.trim().length > 0);
   // An account is required: sign in first, then choose who you are, then setup.
   if (!session) return <Redirect href="/auth" />;
   if (!onboarded) return <Redirect href="/welcome" />;
+  // A supporter doesn't track their own cycle — send them to the support view.
+  if (supporterCode) return <Redirect href="/partner" />;
 
   return (
     <Tabs

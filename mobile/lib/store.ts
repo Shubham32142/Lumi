@@ -11,9 +11,13 @@ import { DEFAULT_AI_CONFIG, type AiConfig } from '@/lib/ai/providers';
 import {
   deleteAccount,
   getLogs,
+  getPartnerSnapshot,
   getProfile,
+  linkPartner as apiLinkPartner,
   putLog,
   putProfile,
+  unlinkPartner as apiUnlinkPartner,
+  type PartnerSnapshot,
   type ProfileSync,
 } from '@/lib/api';
 
@@ -84,9 +88,12 @@ interface AppState {
   session: Session | null; // null = local mode
   syncing: boolean;
   supporterCode: string | null; // set when someone joins as a partner/supporter
+  partnerSnapshot: PartnerSnapshot | null; // the person they support, fetched from the cloud
 
   completeOnboarding: (profile: Profile) => void;
-  becomeSupporter: (code: string) => void;
+  linkPartner: (code: string) => Promise<void>;
+  refreshPartner: () => Promise<void>;
+  unlinkPartner: () => Promise<void>;
   updateProfile: (patch: Partial<Profile>) => void;
   upsertLog: (date: string, patch: Partial<CycleLog>) => void;
   getLog: (date: string) => CycleLog | undefined;
@@ -116,6 +123,7 @@ export const useStore = create<AppState>()(
       session: null,
       syncing: false,
       supporterCode: null,
+      partnerSnapshot: null,
 
       completeOnboarding: (profile) => {
         const starts = profile.lastPeriodDate ? [profile.lastPeriodDate] : [];
@@ -124,9 +132,38 @@ export const useStore = create<AppState>()(
         if (s.session) pushProfileUp(s.session.token, s);
       },
 
-      // Someone joining to support a partner: skip cycle setup, remember their code.
-      becomeSupporter: (code) =>
-        set({ onboarded: true, supporterCode: code.trim() || null }),
+      // Join as a supporter: link to an owner by her code (server validates and
+      // returns her shared snapshot). Throws on a bad code so the UI can show it.
+      linkPartner: async (code) => {
+        const session = get().session;
+        if (!session) throw new Error('Please sign in first.');
+        const res = await apiLinkPartner(session.token, code.trim());
+        set({ onboarded: true, supporterCode: code.trim(), partnerSnapshot: res.snapshot ?? null });
+      },
+
+      refreshPartner: async () => {
+        const session = get().session;
+        if (!session) return;
+        try {
+          const snap = await getPartnerSnapshot(session.token);
+          set({ partnerSnapshot: snap });
+        } catch {
+          // keep the cached snapshot on a transient failure
+        }
+      },
+
+      // Stop supporting: drop the link and return to the "who are you here as" fork.
+      unlinkPartner: async () => {
+        const session = get().session;
+        if (session) {
+          try {
+            await apiUnlinkPartner(session.token);
+          } catch {
+            // best-effort; clear locally regardless
+          }
+        }
+        set({ supporterCode: null, partnerSnapshot: null, onboarded: false });
+      },
 
       updateProfile: (patch) => {
         set((s) => ({ profile: { ...s.profile, ...patch } }));
@@ -294,6 +331,7 @@ export const useStore = create<AppState>()(
           aiConfig: DEFAULT_AI_CONFIG,
           session: null,
           supporterCode: null,
+          partnerSnapshot: null,
         }),
     }),
     {
@@ -308,6 +346,7 @@ export const useStore = create<AppState>()(
         aiConfig: s.aiConfig,
         session: s.session,
         supporterCode: s.supporterCode,
+        partnerSnapshot: s.partnerSnapshot,
       }),
       onRehydrateStorage: () => (state) => {
         // Mark hydration so the UI can avoid a flash of the wrong route.

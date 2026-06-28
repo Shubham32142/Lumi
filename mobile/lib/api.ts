@@ -1,7 +1,7 @@
 // Client for the optional backend (accounts + cloud sync). Luna/AI does NOT go
 // through here — it runs on-device with the user's own provider key (lib/ai).
 import Constants from 'expo-constants';
-import type { CycleLog, Profile } from '@/lib/types';
+import type { CycleLog, Phase, Profile } from '@/lib/types';
 
 // Default to the hosted backend; override via app.json `extra.apiBaseUrl`
 // (e.g. set it to http://localhost:3000 for local backend development).
@@ -75,6 +75,37 @@ export function putLog(token: string, log: CycleLog): Promise<{ log: CycleLog }>
 // ── Account ──
 export function deleteAccount(token: string): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>('DELETE', '/api/account', undefined, token);
+}
+
+// ── Partner linking ──
+export interface PartnerSnapshot {
+  linked: boolean;
+  enabled?: boolean;
+  phase?: Phase | null;
+  dayOfCycle?: number | null;
+  daysUntilNextPeriod?: number | null;
+  shares?: { mood: boolean; energy: boolean; symptoms: boolean };
+  today?: {
+    mood: string | null;
+    energy: string | null;
+    flow: string | null;
+    cravings: string[] | null;
+  };
+}
+export function linkPartner(token: string, code: string): Promise<{ ok: boolean; snapshot: PartnerSnapshot }> {
+  return request('POST', '/api/partner/link', { code }, token);
+}
+export function getPartnerSnapshot(token: string): Promise<PartnerSnapshot> {
+  return request('GET', '/api/partner/snapshot', undefined, token);
+}
+export function unlinkPartner(token: string): Promise<{ ok: boolean }> {
+  return request('POST', '/api/partner/unlink', {}, token);
+}
+export function getPartnerLinks(token: string): Promise<{ partners: { id: string; email: string }[] }> {
+  return request('GET', '/api/partner/links', undefined, token);
+}
+export function removePartner(token: string, partnerId: string): Promise<{ ok: boolean }> {
+  return request('DELETE', '/api/partner/links', { partnerId }, token);
 }
 
 export { BASE_URL };
