@@ -69,7 +69,7 @@ export const PARTNER_GUIDE: Record<Phase, PartnerGuide> = {
     support: [
       { text: 'Offer extra reassurance and patience', detail: 'she may need to hear you are not upset and you are here' },
       { text: 'Quietly pick up the slack', detail: 'do a little extra without being asked. it really registers' },
-      { text: 'Bring comfort food that helps', detail: 'dark chocolate, nuts, a warm carby meal ease the dip' },
+      { text: 'Bring comfort food that helps', detail: 'khichdi or warm dal-chawal, dark chocolate, nuts' },
       { text: 'Protect her calm', detail: 'lighten the social load, dim the evenings, let her rest' },
     ],
     avoid: [
