@@ -19,6 +19,10 @@ const UserSchema = new Schema({
   periodStarts: { type: [String], default: [] }, // ISO dates, for learning cycle length
   bookmarks: { type: [String], default: [] }, // bookmarked article ids
   partnerId: { type: Schema.Types.ObjectId, ref: 'PartnerAccount', default: null },
+  // Partner linking: a supporter sets `partnerOf` to the owner they support;
+  // the owner keeps the list of supporters in `partners` (so she can revoke).
+  partnerOf: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+  partners: { type: [Schema.Types.ObjectId], ref: 'User', default: [] },
   createdAt: { type: Date, default: Date.now },
 });
 
