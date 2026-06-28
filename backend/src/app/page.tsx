@@ -8,6 +8,7 @@ export default function Home() {
         <li><code>POST /api/auth/login</code></li>
         <li><code>POST /api/auth/logout</code></li>
         <li><code>GET/POST /api/logs</code></li>
+        <li><code>GET/PUT /api/profile</code></li>
         <li><code>POST /api/cycle/predict</code></li>
         <li><code>GET /api/partner</code></li>
         <li><code>GET /api/health</code></li>

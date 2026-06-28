@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { theme } from '@/theme';
 import { useStore } from '@/lib/store';
 import { AnimatedSplash } from '@/components/AnimatedSplash';
+import { ToastHost } from '@/components/ui';
 
 export default function RootLayout() {
   const hydrated = useStore((s) => s.hydrated);
@@ -19,6 +20,13 @@ export default function RootLayout() {
     }, 1500);
     return () => clearTimeout(t);
   }, []);
+
+  // Once hydrated, pull any cloud changes if the user is signed in.
+  useEffect(() => {
+    if (!hydrated) return;
+    const s = useStore.getState();
+    if (s.session) void s.cloudSync(false).catch(() => {});
+  }, [hydrated]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -39,6 +47,9 @@ export default function RootLayout() {
             <Stack.Screen name="insights" options={{ headerShown: true, title: 'Insights' }} />
           </Stack>
         ) : null}
+
+        {/* Toasts overlay the app (but sit below the launch splash). */}
+        <ToastHost />
 
         {/* Launch animation — plays start-to-end, then fades to reveal the app. */}
         {!introDone ? (

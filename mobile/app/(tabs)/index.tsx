@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { ChevronRight, Settings as SettingsIcon, Sparkles } from 'lucide-react-native';
 import { theme } from '@/theme';
 import { useStore } from '@/lib/store';
+import { toast } from '@/lib/toast';
 import type { Phase } from '@/lib/types';
 import { phaseMeta } from '@/theme/phases';
 import {
@@ -72,7 +73,13 @@ export default function Today() {
                 <AppText variant="secondary">
                   Tell us when your last period began and we'll map out your phases.
                 </AppText>
-                <Button title="My period started today" onPress={() => logPeriodStart(today)} />
+                <Button
+                  title="My period started today"
+                  onPress={() => {
+                    logPeriodStart(today);
+                    toast.success('Logged — rest up, you’ve got this 🩸');
+                  }}
+                />
                 <Button
                   title="Pick a different date"
                   variant="secondary"

@@ -7,7 +7,8 @@ import { useStore } from '@/lib/store';
 import type { SymptomKey } from '@/lib/types';
 import { formatLong, todayISO } from '@/lib/date';
 import { SYMPTOM_CONFIG } from '@/lib/symptoms';
-import { signup, ApiError } from '@/lib/api';
+import { signup, login, ApiError } from '@/lib/api';
+import { toast } from '@/lib/toast';
 import { PROVIDERS, PROVIDER_OPTIONS, type ProviderId } from '@/lib/ai/providers';
 import { AppText, Button, Card, ChoiceChip, Divider, Screen, Select } from '@/components/ui';
 
@@ -30,6 +31,11 @@ export default function Settings() {
   const resetAll = useStore((s) => s.resetAll);
   const aiConfig = useStore((s) => s.aiConfig);
   const setAiConfig = useStore((s) => s.setAiConfig);
+  const session = useStore((s) => s.session);
+  const setSession = useStore((s) => s.setSession);
+  const clearSession = useStore((s) => s.clearSession);
+  const cloudSync = useStore((s) => s.cloudSync);
+  const syncing = useStore((s) => s.syncing);
   const snapshot = useStore((s) => ({
     profile: s.profile,
     logs: s.logs,
@@ -77,24 +83,44 @@ export default function Settings() {
     );
   }
 
-  async function createAccount() {
+  async function authenticate(kind: 'signup' | 'login') {
     if (!email.trim() || password.length < 8) {
-      Alert.alert('Hold on', 'Enter an email and a password of at least 8 characters.');
+      toast.error('Enter an email and a password of at least 8 characters.');
       return;
     }
     setCreating(true);
     try {
-      await signup(email.trim(), password);
-      Alert.alert('Account created 🎉', 'Cloud sync is set up. Your data is backed up.');
+      const res =
+        kind === 'signup'
+          ? await signup(email.trim(), password)
+          : await login(email.trim(), password);
+      setSession({ token: res.token, userId: res.userId, email: email.trim() });
       setEmail('');
       setPassword('');
+      toast.success(kind === 'signup' ? 'Account created — backing up ☁️' : 'Logged in 🎉');
+      cloudSync(true).catch(() => {});
     } catch (e) {
-      Alert.alert(
-        'Could not create account',
-        e instanceof ApiError ? e.message : 'Is the backend running? You can keep using local mode.',
+      toast.error(
+        e instanceof ApiError
+          ? e.message
+          : 'Could not reach the server. You can keep using local mode.',
       );
     } finally {
       setCreating(false);
+    }
+  }
+
+  function logout() {
+    clearSession();
+    toast.info('Logged out — your data stays on this device.');
+  }
+
+  async function syncNow() {
+    try {
+      await cloudSync(false);
+      toast.success('Synced ☁️');
+    } catch {
+      toast.error('Sync failed — check your connection.');
     }
   }
 
@@ -204,7 +230,10 @@ export default function Settings() {
               <Button
                 title="My period started today"
                 variant="secondary"
-                onPress={() => logPeriodStart(todayISO())}
+                onPress={() => {
+                  logPeriodStart(todayISO());
+                  toast.success('Period start saved 🩸');
+                }}
               />
             </View>
           </Card>
@@ -313,35 +342,69 @@ export default function Settings() {
         {/* ── Account ── */}
         <Section title="Account ☁️">
           <Card>
-            <AppText variant="body">
-              You're in local mode — everything lives on this device. Add an account for cloud
-              backup and Luna's memory across devices. (Optional.)
-            </AppText>
-            <Divider />
-            <View style={{ gap: theme.space[2] }}>
-              <AppText variant="label">Email</AppText>
-              <TextInput
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                placeholder="you@example.com"
-                placeholderTextColor={theme.color.text.secondary}
-                className="rounded-md border border-line-input bg-page px-3 text-base text-ink"
-                style={{ height: theme.size.inputH }}
-              />
-              <AppText variant="label">Password</AppText>
-              <TextInput
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                placeholder="At least 8 characters"
-                placeholderTextColor={theme.color.text.secondary}
-                className="rounded-md border border-line-input bg-page px-3 text-base text-ink"
-                style={{ height: theme.size.inputH }}
-              />
-              <Button title={creating ? 'Creating…' : 'Create account'} disabled={creating} onPress={createAccount} />
-            </View>
+            {session ? (
+              <View style={{ gap: theme.space[3] }}>
+                <View style={{ gap: theme.space[1] }}>
+                  <AppText variant="label">Signed in</AppText>
+                  <AppText variant="body">{session.email}</AppText>
+                  <AppText variant="caption">
+                    {syncing
+                      ? 'Syncing…'
+                      : 'Your logs and settings back up to the cloud automatically. Your AI key stays on this device. ☁️'}
+                  </AppText>
+                </View>
+                <Button
+                  title={syncing ? 'Syncing…' : 'Sync now'}
+                  variant="secondary"
+                  disabled={syncing}
+                  onPress={syncNow}
+                />
+                <Button title="Log out" variant="secondary" onPress={logout} />
+              </View>
+            ) : (
+              <>
+                <AppText variant="body">
+                  You're in local mode — everything lives on this device. Create an account (or log
+                  in) for cloud backup and sync across devices. Your AI key always stays local. (Optional.)
+                </AppText>
+                <Divider />
+                <View style={{ gap: theme.space[2] }}>
+                  <AppText variant="label">Email</AppText>
+                  <TextInput
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="email-address"
+                    placeholder="you@example.com"
+                    placeholderTextColor={theme.color.text.secondary}
+                    className="rounded-md border border-line-input bg-page px-3 text-base text-ink"
+                    style={{ height: theme.size.inputH }}
+                  />
+                  <AppText variant="label">Password</AppText>
+                  <TextInput
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                    placeholder="At least 8 characters"
+                    placeholderTextColor={theme.color.text.secondary}
+                    className="rounded-md border border-line-input bg-page px-3 text-base text-ink"
+                    style={{ height: theme.size.inputH }}
+                  />
+                  <Button
+                    title={creating ? 'Please wait…' : 'Create account'}
+                    disabled={creating}
+                    onPress={() => authenticate('signup')}
+                  />
+                  <Button
+                    title="Log in"
+                    variant="secondary"
+                    disabled={creating}
+                    onPress={() => authenticate('login')}
+                  />
+                </View>
+              </>
+            )}
           </Card>
         </Section>
 

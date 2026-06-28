@@ -15,6 +15,9 @@ const UserSchema = new Schema({
   isIrregular: { type: Boolean, default: false },
   trackedSymptoms: { type: [String], default: [] },
   notificationPrefs: { type: Schema.Types.Mixed, default: {} },
+  partnerSharing: { type: Schema.Types.Mixed, default: {} },
+  periodStarts: { type: [String], default: [] }, // ISO dates, for learning cycle length
+  bookmarks: { type: [String], default: [] }, // bookmarked article ids
   partnerId: { type: Schema.Types.ObjectId, ref: 'PartnerAccount', default: null },
   createdAt: { type: Date, default: Date.now },
 });

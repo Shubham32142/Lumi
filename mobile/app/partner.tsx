@@ -1,5 +1,6 @@
-import { Alert, View } from 'react-native';
+import { View } from 'react-native';
 import { router } from 'expo-router';
+import { toast } from '@/lib/toast';
 import { Heart } from 'lucide-react-native';
 import { theme } from '@/theme';
 import { useStore } from '@/lib/store';
@@ -96,9 +97,7 @@ export default function Partner() {
         <Button
           title="Send love 💕"
           icon={<Heart size={theme.size.iconSm} color={theme.color.text.onPrimary} />}
-          onPress={() =>
-            Alert.alert('Sent 💕', 'Your person will get a little "thinking of you" nudge.')
-          }
+          onPress={() => toast.success('Sent 💕 — your person will feel the love')}
         />
 
         <AppText variant="caption">

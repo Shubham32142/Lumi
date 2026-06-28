@@ -12,5 +12,6 @@ export { Screen } from './Screen';
 export { Select } from './Select';
 export type { SelectOption } from './Select';
 export { Tag } from './Tag';
+export { ToastHost } from './ToastHost';
 export { TypingDots } from './TypingDots';
 export { AnimatedPressable, usePressScale } from './pressScale';
