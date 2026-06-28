@@ -1,8 +1,12 @@
 import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
 import { hashPassword, signToken, setAuthCookie } from '@/lib/auth';
+import { checkRate } from '@/lib/rateLimit';
 
 export async function POST(req: Request) {
+  const limited = checkRate(req, 'signup', 5, 10 * 60 * 1000); // 5 per 10 min / IP
+  if (limited) return limited;
+
   let body: { email?: string; password?: string };
   try {
     body = await req.json();

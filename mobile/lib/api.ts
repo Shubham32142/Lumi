@@ -3,9 +3,11 @@
 // provider key (see lib/ai). These calls are only used once an account exists.
 import Constants from 'expo-constants';
 
+// Default to the hosted backend; override via app.json `extra.apiBaseUrl`
+// (e.g. set it to http://localhost:3000 for local backend development).
 const BASE_URL =
   (Constants.expoConfig?.extra as { apiBaseUrl?: string } | undefined)?.apiBaseUrl ??
-  'http://localhost:3000';
+  'https://lumi-xbka.vercel.app';
 
 export class ApiError extends Error {}
 

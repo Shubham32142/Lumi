@@ -1,9 +1,12 @@
 import { connectDB } from '@/lib/db';
 import { CycleLog } from '@/models/CycleLog';
 import { getUserId } from '@/lib/auth';
+import { checkRate } from '@/lib/rateLimit';
 
 // GET /api/logs?from=YYYY-MM-DD&to=YYYY-MM-DD — list the signed-in user's logs.
 export async function GET(req: Request) {
+  const limited = checkRate(req, 'logs', 120, 60 * 1000); // 120 per min / IP
+  if (limited) return limited;
   const userId = await getUserId(req);
   if (!userId) return Response.json({ error: 'Not authenticated.' }, { status: 401 });
 
@@ -26,6 +29,8 @@ export async function GET(req: Request) {
 
 // POST /api/logs — upsert a single day's log (body: { date, ...fields }).
 export async function POST(req: Request) {
+  const limited = checkRate(req, 'logs', 120, 60 * 1000); // 120 per min / IP
+  if (limited) return limited;
   const userId = await getUserId(req);
   if (!userId) return Response.json({ error: 'Not authenticated.' }, { status: 401 });
 
