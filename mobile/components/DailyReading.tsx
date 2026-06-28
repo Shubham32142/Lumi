@@ -117,21 +117,31 @@ export function DailyReading({ phase }: { phase: Phase }) {
           </Pressable>
         </View>
 
-        {/* For you today */}
+        {/* For you today — each nudge taps through to concrete specifics */}
         <View style={{ gap: theme.space[2] }}>
-          <AppText variant="label">For you today</AppText>
+          <View className="flex-row items-center justify-between">
+            <AppText variant="label">For you today</AppText>
+            <AppText variant="caption">Tap for specifics</AppText>
+          </View>
           {reading.suggestions.map((s, i) => {
             const Icon = SUGGESTION_ICON[s.icon];
             return (
-              <View key={i} className="flex-row" style={{ gap: theme.space[3] }}>
-                <Icon size={theme.size.iconMd} color={accent} style={{ marginTop: 2 }} />
+              <Pressable
+                key={i}
+                onPress={() => router.push(`/suggestion?phase=${phase}&i=${i}`)}
+                accessibilityRole="button"
+                className="flex-row items-center rounded-md active:bg-hover"
+                style={{ gap: theme.space[3], paddingVertical: theme.space[1] }}
+              >
+                <Icon size={theme.size.iconMd} color={accent} />
                 <View style={{ flex: 1 }}>
                   <AppText variant="bodySm" style={{ color: theme.color.text.primary, fontFamily: theme.font.family.sansSemibold }}>
                     {s.label}
                   </AppText>
                   <AppText variant="secondary">{s.text}</AppText>
                 </View>
-              </View>
+                <ChevronRight size={theme.size.iconSm} color={theme.color.text.secondary} />
+              </Pressable>
             );
           })}
         </View>

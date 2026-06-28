@@ -68,6 +68,10 @@ function RootContent() {
             options={{ headerShown: false, presentation: 'card', animation: 'fade' }}
           />
           <Stack.Screen name="settings" options={{ headerShown: true, title: 'Settings', presentation: 'card' }} />
+          <Stack.Screen
+            name="suggestion"
+            options={{ headerShown: true, title: 'For you', presentation: 'modal' }}
+          />
           <Stack.Screen name="partner" options={{ headerShown: true, title: 'Partner View' }} />
           <Stack.Screen name="insights" options={{ headerShown: true, title: 'Insights' }} />
         </Stack>
