@@ -7,6 +7,9 @@ import { lineHeight, useTheme } from '@/theme';
 import { useStore } from '@/lib/store';
 import type { CycleLog, PainType, SymptomKey } from '@/lib/types';
 import { formatLong, todayISO } from '@/lib/date';
+import { phaseInfoFor } from '@/lib/cycle';
+import { phaseColors, phaseMeta } from '@/theme/phases';
+import { PHASE_READING } from '@/content/reading';
 import { PAIN_TYPES, SYMPTOM_CONFIG, SYMPTOM_ORDER } from '@/lib/symptoms';
 import { AppText, Button, ChoiceChip, FadeIn, Screen } from '@/components/ui';
 
@@ -26,9 +29,12 @@ export default function Log() {
   const theme = useTheme();
   const params = useLocalSearchParams<{ date?: string }>();
   const date = params.date ?? todayISO();
-  const tracked = useStore((s) => s.profile.trackedSymptoms);
+  const profile = useStore((s) => s.profile);
+  const tracked = profile.trackedSymptoms;
   const log = useStore((s) => s.logs[date]); // reactive — edits reflect everywhere live
   const upsertLog = useStore((s) => s.upsertLog);
+
+  const info = phaseInfoFor(profile, date);
 
   // Bumps on every change so the "Saved" pill re-animates.
   const [savedAt, setSavedAt] = useState<number | null>(null);
@@ -96,6 +102,20 @@ export default function Log() {
             Tap what fits. It saves on its own. Skip anything that doesn't.
           </AppText>
         </View>
+
+        {info ? (
+          <View
+            className="rounded-md"
+            style={{
+              backgroundColor: phaseColors(theme.color, info.phase).soft,
+              padding: theme.space[3],
+            }}
+          >
+            <AppText variant="bodySm" className="text-ink">
+              You're in {phaseMeta(info.phase).name}. {PHASE_READING[info.phase].validation}
+            </AppText>
+          </View>
+        ) : null}
 
         {/* Single & multi select symptom groups */}
         {SYMPTOM_ORDER.filter(isTracked).map((key, idx) => {

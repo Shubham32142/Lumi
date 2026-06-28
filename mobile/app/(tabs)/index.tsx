@@ -7,9 +7,12 @@ import { toast } from '@/lib/toast';
 import { phaseColors, phaseMeta } from '@/theme/phases';
 import { nextPeriodStart, phaseInfoFor } from '@/lib/cycle';
 import { formatShort, todayISO } from '@/lib/date';
+import { commonMoodInPhase, checkInCount } from '@/lib/personal';
+import { SYMPTOM_CONFIG } from '@/lib/symptoms';
 import { AppText, Button, Card, FadeIn, Screen } from '@/components/ui';
 import { CycleRing } from '@/components/CycleRing';
 import { Aura } from '@/components/Aura';
+import { DailyReading } from '@/components/DailyReading';
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -26,9 +29,23 @@ export default function Today() {
 
   const today = todayISO();
   const info = phaseInfoFor(profile);
-  const loggedToday = Boolean(logs[today]);
   const next = info ? nextPeriodStart(profile) : null;
   const meta = info ? phaseMeta(info.phase) : null;
+
+  // What the app has learned about YOU from your own check-ins (the data payoff).
+  let personalNote: string | null = null;
+  if (info && meta) {
+    const personal = commonMoodInPhase(profile, logs, info.phase);
+    if (personal) {
+      const label =
+        SYMPTOM_CONFIG.mood.options.find((o) => o.value === personal.mood)?.label ?? personal.mood;
+      personalNote = `In your ${meta.name}, you most often feel ${label.toLowerCase()}. That is from your own check-ins.`;
+    } else if (checkInCount(logs) >= 1) {
+      personalNote = "A few more check-ins and I'll start reading your own pattern, not just the averages.";
+    } else {
+      personalNote = 'Check in over a few days and this starts to read you, not just the averages.';
+    }
+  }
 
   return (
     <Screen contentBottom={theme.space[4]}>
@@ -84,21 +101,23 @@ export default function Today() {
               </AppText>
             ) : null}
 
-            <FadeIn delay={120}>
-              <Button
-                title={loggedToday ? "Edit today's check-in" : 'Log how today feels'}
-                onPress={() => router.push('/log')}
-              />
+            <FadeIn delay={140}>
+              <DailyReading phase={info.phase} />
             </FadeIn>
 
-            <FadeIn delay={180}>
-              <View style={{ gap: theme.space[2] }}>
-                <Row
-                  title={`${meta.name}. Here's why you feel it`}
-                  onPress={() => router.push('/learn')}
-                />
-                <Row title="See your patterns" onPress={() => router.push('/insights')} />
-              </View>
+            {personalNote ? (
+              <FadeIn delay={200}>
+                <View
+                  className="rounded-lg"
+                  style={{ backgroundColor: theme.color.surface.muted, padding: theme.space[3] }}
+                >
+                  <AppText variant="secondary">{personalNote}</AppText>
+                </View>
+              </FadeIn>
+            ) : null}
+
+            <FadeIn delay={240}>
+              <Row title="See your patterns" onPress={() => router.push('/insights')} />
             </FadeIn>
           </>
         ) : (
