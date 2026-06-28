@@ -1,5 +1,6 @@
-// Typography primitive. Every text style is a token-backed variant — screens
-// never set raw font sizes/weights/colors.
+// Typography primitive. Headlines use the editorial serif (Fraunces); UI and body
+// use the warm grotesque (Hanken). Colour comes from theme-able classes so it
+// follows light/dark. Screens never set raw font sizes/families/colours.
 import { Text, type TextProps } from 'react-native';
 import { lineHeight, theme } from '@/theme';
 
@@ -14,28 +15,21 @@ export type TextVariant =
   | 'label'
   | 'caption';
 
-const VARIANT_CLASS: Record<TextVariant, string> = {
-  h1: 'text-2xl font-bold text-ink',
-  h2: 'text-xl font-semibold text-ink',
-  h3: 'text-lg font-semibold text-ink',
-  title: 'text-base font-semibold text-ink',
-  body: 'text-base text-ink',
-  bodySm: 'text-sm text-ink',
-  secondary: 'text-sm text-ink-secondary',
-  label: 'text-sm font-medium text-ink-label',
-  caption: 'text-xs text-ink-secondary',
-};
+const f = theme.font.family;
+const s = theme.font.size;
 
-const VARIANT_LINE: Record<TextVariant, number> = {
-  h1: lineHeight(theme.font.size['2xl'], 'tight'),
-  h2: lineHeight(theme.font.size.xl, 'tight'),
-  h3: lineHeight(theme.font.size.lg, 'tight'),
-  title: lineHeight(theme.font.size.base, 'tight'),
-  body: lineHeight(theme.font.size.base, 'normal'),
-  bodySm: lineHeight(theme.font.size.sm, 'normal'),
-  secondary: lineHeight(theme.font.size.sm, 'normal'),
-  label: lineHeight(theme.font.size.sm, 'normal'),
-  caption: lineHeight(theme.font.size.xs, 'normal'),
+type Spec = { family: string; size: number; lh: 'tight' | 'normal'; color: string };
+
+const VARIANT: Record<TextVariant, Spec> = {
+  h1: { family: f.displayBold, size: s['2xl'], lh: 'tight', color: 'text-ink' },
+  h2: { family: f.display, size: s.xl, lh: 'tight', color: 'text-ink' },
+  h3: { family: f.display, size: s.lg, lh: 'tight', color: 'text-ink' },
+  title: { family: f.sansSemibold, size: s.base, lh: 'tight', color: 'text-ink' },
+  body: { family: f.sans, size: s.base, lh: 'normal', color: 'text-ink' },
+  bodySm: { family: f.sans, size: s.sm, lh: 'normal', color: 'text-ink' },
+  secondary: { family: f.sans, size: s.sm, lh: 'normal', color: 'text-ink-secondary' },
+  label: { family: f.sansMedium, size: s.sm, lh: 'normal', color: 'text-ink-label' },
+  caption: { family: f.sans, size: s.xs, lh: 'normal', color: 'text-ink-secondary' },
 };
 
 interface AppTextProps extends TextProps {
@@ -43,16 +37,12 @@ interface AppTextProps extends TextProps {
   className?: string;
 }
 
-export function AppText({
-  variant = 'body',
-  className,
-  style,
-  ...rest
-}: AppTextProps) {
+export function AppText({ variant = 'body', className, style, ...rest }: AppTextProps) {
+  const v = VARIANT[variant];
   return (
     <Text
-      className={`${VARIANT_CLASS[variant]} ${className ?? ''}`}
-      style={[{ lineHeight: VARIANT_LINE[variant] }, style]}
+      className={`${v.color} ${className ?? ''}`}
+      style={[{ fontFamily: v.family, fontSize: v.size, lineHeight: lineHeight(v.size, v.lh) }, style]}
       {...rest}
     />
   );

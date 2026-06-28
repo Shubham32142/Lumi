@@ -1,9 +1,9 @@
-// Dedicated Login / Sign-up screen. Reachable from Settings and onboarding.
-// Cloud backup is optional — the app is fully usable in local mode.
+// Login / Sign-up. An account is required, so this is the first screen until you
+// sign in. Log in is the default; new here? Switch to Sign up.
 import { useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { useStore } from '@/lib/store';
 import { toast } from '@/lib/toast';
 import { ApiError, login, signup } from '@/lib/api';
@@ -13,8 +13,9 @@ import { Logo } from '@/components/Logo';
 type Mode = 'signup' | 'login';
 
 export default function Auth() {
+  const theme = useTheme();
   const params = useLocalSearchParams<{ mode?: string }>();
-  const [mode, setMode] = useState<Mode>(params.mode === 'login' ? 'login' : 'signup');
+  const [mode, setMode] = useState<Mode>(params.mode === 'signup' ? 'signup' : 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -34,14 +35,13 @@ export default function Auth() {
           ? await signup(email.trim(), password)
           : await login(email.trim(), password);
       setSession({ token: res.token, userId: res.userId, email: email.trim() });
-      cloudSync(true).catch(() => {});
-      toast.success(mode === 'signup' ? 'Account created — backing up ☁️' : 'Welcome back 🎉');
-      router.back();
+      // Pull (or push) cloud data before entering, so returning users skip setup.
+      await cloudSync(true).catch(() => {});
+      toast.success(mode === 'signup' ? 'Account created. Backing up your cycle.' : 'Welcome back.');
+      router.replace('/');
     } catch (e) {
       toast.error(
-        e instanceof ApiError
-          ? e.message
-          : 'Could not reach the server. You can keep using local mode.',
+        e instanceof ApiError ? e.message : 'Could not reach the server. Please try again.',
       );
     } finally {
       setBusy(false);
@@ -55,11 +55,11 @@ export default function Auth() {
       <View style={{ paddingTop: theme.space[6], gap: theme.space[6], alignItems: 'center' }}>
         <Logo size={72} />
         <View style={{ gap: theme.space[1], alignItems: 'center' }}>
-          <AppText variant="h1">{isSignup ? 'Create your account' : 'Welcome back'}</AppText>
+          <AppText variant="h1">{isSignup ? 'Create your account' : 'Welcome to Lumi'}</AppText>
           <AppText variant="secondary" style={{ textAlign: 'center' }}>
             {isSignup
-              ? 'Back up your cycle and sync across devices. Optional — Lumi works fully offline.'
-              : 'Log in to restore your synced cycle data.'}
+              ? 'Save your cycle and sync it across your devices.'
+              : 'Log in to pick up right where you left off.'}
           </AppText>
         </View>
 
@@ -112,14 +112,13 @@ export default function Auth() {
             </AppText>
           </View>
         </Card>
-
-        <Button title="Continue without an account" variant="secondary" onPress={() => router.back()} />
       </View>
     </Screen>
   );
 }
 
 function Segment({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+  const theme = useTheme();
   return (
     <Pressable
       onPress={onPress}

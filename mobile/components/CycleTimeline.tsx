@@ -4,14 +4,15 @@
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { ChevronDown } from 'lucide-react-native';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import type { Phase, Profile } from '@/lib/types';
-import { phaseMeta } from '@/theme/phases';
+import { phaseColors, phaseMeta } from '@/theme/phases';
 import { cyclePhaseRanges, dayOfCycle } from '@/lib/cycle';
 import { daysBetween, formatShort, todayISO } from '@/lib/date';
 import { AppText } from '@/components/ui';
 
 export function CycleTimeline({ profile }: { profile: Profile }) {
+  const theme = useTheme();
   const today = todayISO();
   const ranges = cyclePhaseRanges(profile, today);
   const currentPhase = ranges?.find((r) => today >= r.startISO && today <= r.endISO)?.phase ?? null;
@@ -24,6 +25,8 @@ export function CycleTimeline({ profile }: { profile: Profile }) {
     <View style={{ gap: theme.space[2] }}>
       {ranges.map((r) => {
         const meta = phaseMeta(r.phase);
+        const PhaseIcon = meta.icon;
+        const { accent, soft } = phaseColors(theme.color, r.phase);
         const isCurrent = r.phase === currentPhase;
         const isPast = today > r.endISO;
         const daysAway = daysBetween(today, r.startISO);
@@ -45,8 +48,8 @@ export function CycleTimeline({ profile }: { profile: Profile }) {
             accessibilityRole="button"
             className="rounded-lg border"
             style={{
-              borderColor: isCurrent ? meta.accent : theme.color.border.default,
-              backgroundColor: isCurrent ? meta.soft : theme.color.surface.page,
+              borderColor: isCurrent ? accent : theme.color.border.default,
+              backgroundColor: isCurrent ? soft : theme.color.surface.page,
               padding: theme.space[3],
               opacity: isPast && !expanded ? 0.65 : 1,
             }}
@@ -58,25 +61,24 @@ export function CycleTimeline({ profile }: { profile: Profile }) {
                   width: 12,
                   height: 12,
                   borderRadius: 999,
-                  backgroundColor: isPast ? theme.color.surface.page : meta.accent,
+                  backgroundColor: isPast ? theme.color.surface.page : accent,
                   borderWidth: isPast ? 2 : 0,
-                  borderColor: meta.accent,
+                  borderColor: accent,
                 }}
               />
               <View style={{ flex: 1 }}>
-                <View className="flex-row items-center" style={{ gap: theme.space[1] }}>
-                  <AppText variant="title">
-                    {meta.emoji} {meta.name}
-                  </AppText>
+                <View className="flex-row items-center" style={{ gap: theme.space[2] }}>
+                  <PhaseIcon size={theme.size.iconSm} color={accent} />
+                  <AppText variant="title">{meta.name}</AppText>
                 </View>
                 <AppText variant="caption">
-                  {meta.clinical} · {formatShort(r.startISO)}–{formatShort(r.endISO)}
+                  {meta.clinical} · {formatShort(r.startISO)} to {formatShort(r.endISO)}
                 </AppText>
               </View>
               <View
                 className="rounded-full"
                 style={{
-                  backgroundColor: isCurrent ? meta.accent : theme.color.surface.muted,
+                  backgroundColor: isCurrent ? accent : theme.color.surface.muted,
                   paddingHorizontal: theme.space[2],
                   paddingVertical: 3,
                 }}

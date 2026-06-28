@@ -1,11 +1,16 @@
 import { Redirect, Tabs } from 'expo-router';
 import { BookOpen, CalendarDays, Home, MessageCircle, PlusCircle } from 'lucide-react-native';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { useStore } from '@/lib/store';
 
 export default function TabsLayout() {
+  const theme = useTheme();
+  const session = useStore((s) => s.session);
   const onboarded = useStore((s) => s.onboarded);
-  if (!onboarded) return <Redirect href="/onboarding" />;
+  const hasAiKey = useStore((s) => s.aiConfig.apiKey.trim().length > 0);
+  // An account is required: sign in first, then choose who you are, then setup.
+  if (!session) return <Redirect href="/auth" />;
+  if (!onboarded) return <Redirect href="/welcome" />;
 
   return (
     <Tabs
@@ -59,6 +64,9 @@ export default function TabsLayout() {
         name="luna"
         options={{
           title: 'Luna',
+          // Luna is a Beta feature gated on the user's own API key. Hide the tab
+          // entirely until a key is set (in Settings), so it never dangles unusable.
+          href: hasAiKey ? undefined : null,
           tabBarIcon: ({ color }) => <MessageCircle size={theme.size.iconLg} color={color} />,
         }}
       />

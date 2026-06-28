@@ -3,7 +3,7 @@
 // animation" is intentionally relaxed per product direction).
 import type { ReactNode } from 'react';
 import { Text, View } from 'react-native';
-import { theme, lineHeight } from '@/theme';
+import { lineHeight, useTheme } from '@/theme';
 import { AnimatedPressable, usePressScale } from './pressScale';
 
 type Variant = 'primary' | 'secondary' | 'danger';
@@ -17,24 +17,6 @@ interface ButtonProps {
   icon?: ReactNode;
 }
 
-const SURFACE: Record<Variant, { bg: string; border: string; text: string }> = {
-  primary: {
-    bg: theme.color.primary.base,
-    border: theme.color.primary.base,
-    text: theme.color.text.onPrimary,
-  },
-  secondary: {
-    bg: theme.color.surface.page,
-    border: theme.color.border.input,
-    text: theme.color.text.label,
-  },
-  danger: {
-    bg: theme.color.status.error,
-    border: theme.color.status.error,
-    text: theme.color.text.onPrimary,
-  },
-};
-
 export function Button({
   title,
   onPress,
@@ -43,7 +25,25 @@ export function Button({
   fullWidth = true,
   icon,
 }: ButtonProps) {
+  const theme = useTheme();
   const press = usePressScale();
+  const SURFACE: Record<Variant, { bg: string; border: string; text: string }> = {
+    primary: {
+      bg: theme.color.primary.base,
+      border: theme.color.primary.base,
+      text: theme.color.text.onPrimary,
+    },
+    secondary: {
+      bg: theme.color.surface.page,
+      border: theme.color.border.input,
+      text: theme.color.text.label,
+    },
+    danger: {
+      bg: theme.color.status.error,
+      border: theme.color.status.error,
+      text: theme.color.text.onPrimary,
+    },
+  };
   const s = disabled
     ? {
         bg: theme.color.surface.muted,
@@ -82,9 +82,9 @@ export function Button({
       <Text
         style={{
           color: s.text,
-          fontSize: theme.font.size.sm,
-          fontWeight: theme.font.weight.medium as '500',
-          lineHeight: lineHeight(theme.font.size.sm, 'tight'),
+          fontSize: theme.font.size.base,
+          fontFamily: theme.font.family.sansSemibold,
+          lineHeight: lineHeight(theme.font.size.base, 'tight'),
         }}
       >
         {title}

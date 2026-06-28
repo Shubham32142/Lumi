@@ -1,7 +1,7 @@
 // Lumi mark: a crescent (an open ring with a soft gap) cradling a glowing dot.
 // Geometry is exported so the animated splash can reuse the exact same shape.
 import Svg, { Circle, G } from 'react-native-svg';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 const R = 34;
 const STROKE = 12;
@@ -27,7 +27,9 @@ interface LogoProps {
   color?: string;
 }
 
-export function Logo({ size = 120, color = theme.color.primary.base }: LogoProps) {
+export function Logo({ size = 120, color }: LogoProps) {
+  const theme = useTheme();
+  const stroke = color ?? theme.color.primary.base;
   return (
     <Svg width={size} height={size} viewBox={`0 0 ${LOGO.box} ${LOGO.box}`}>
       <G rotation={LOGO.rot} origin={`${LOGO.cx}, ${LOGO.cy}`}>
@@ -35,7 +37,7 @@ export function Logo({ size = 120, color = theme.color.primary.base }: LogoProps
           cx={LOGO.cx}
           cy={LOGO.cy}
           r={LOGO.r}
-          stroke={color}
+          stroke={stroke}
           strokeWidth={LOGO.stroke}
           strokeLinecap="round"
           fill="none"
@@ -43,7 +45,7 @@ export function Logo({ size = 120, color = theme.color.primary.base }: LogoProps
           strokeDashoffset={LOGO.gapLen}
         />
       </G>
-      <Circle cx={LOGO.dotCx} cy={LOGO.dotCy} r={LOGO.dotR} fill={color} />
+      <Circle cx={LOGO.dotCx} cy={LOGO.dotCy} r={LOGO.dotR} fill={stroke} />
     </Svg>
   );
 }

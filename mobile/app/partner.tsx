@@ -2,7 +2,7 @@ import { View } from 'react-native';
 import { router } from 'expo-router';
 import { toast } from '@/lib/toast';
 import { Heart } from 'lucide-react-native';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { useStore } from '@/lib/store';
 import { phaseMeta } from '@/theme/phases';
 import { phaseInfoFor } from '@/lib/cycle';
@@ -18,6 +18,7 @@ function optionLabel(group: 'mood' | 'energy', value: string): string {
 }
 
 export default function Partner() {
+  const theme = useTheme();
   const profile = useStore((s) => s.profile);
   const todayLog = useStore((s) => s.logs[todayISO()]);
   const sharing = profile.partnerSharing;
@@ -31,8 +32,8 @@ export default function Partner() {
           <AppText variant="h1">Partner View</AppText>
           <Card roomy>
             <AppText variant="body">
-              Partner sharing is currently off. Turn it on in Settings to share a simple,
-              respectful snapshot — you choose exactly what's visible.
+              Partner sharing is off right now. Turn it on in Settings to share a simple,
+              respectful snapshot. You choose exactly what's visible.
             </AppText>
           </Card>
           <Button title="Open sharing settings" onPress={() => router.push('/settings')} />
@@ -45,7 +46,7 @@ export default function Partner() {
     <Screen>
       <View style={{ paddingTop: theme.space[2], gap: theme.space[4] }}>
         <View style={{ gap: theme.space[1] }}>
-          <AppText variant="secondary">This is what your partner sees 👀</AppText>
+          <AppText variant="secondary">This is what your partner sees</AppText>
           <AppText variant="h1">Today, at a glance</AppText>
         </View>
 
@@ -95,14 +96,14 @@ export default function Partner() {
         ) : null}
 
         <Button
-          title="Send love 💕"
+          title="Send love"
           icon={<Heart size={theme.size.iconSm} color={theme.color.text.onPrimary} />}
-          onPress={() => toast.success('Sent 💕 — your person will feel the love')}
+          onPress={() => toast.success('Sent. Your person will feel the love.')}
         />
 
         <AppText variant="caption">
           Partners never see symptom details, history, or your chats with Luna unless you turn
-          those on. You're in control. 🔒
+          those on. You're in control.
         </AppText>
       </View>
     </Screen>

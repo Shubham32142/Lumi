@@ -8,9 +8,10 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 function Dot({ delay }: { delay: number }) {
+  const theme = useTheme();
   const o = useSharedValue(0.3);
   useEffect(() => {
     o.value = withDelay(delay, withRepeat(withTiming(1, { duration: 480 }), -1, true));
@@ -27,6 +28,7 @@ function Dot({ delay }: { delay: number }) {
 }
 
 export function TypingDots() {
+  const theme = useTheme();
   return (
     <View className="flex-row items-center" style={{ gap: theme.space[1] }}>
       <Dot delay={0} />

@@ -1,7 +1,22 @@
 import { Alert, Pressable, Share, Switch, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
-import { Minus, Plus } from 'lucide-react-native';
-import { theme } from '@/theme';
+import {
+  Bell,
+  Bot,
+  Heart,
+  ListChecks,
+  Minus,
+  Moon,
+  Plus,
+  Repeat,
+  ShieldCheck,
+  Smartphone,
+  Sun,
+  SunMoon,
+  User,
+  type LucideIcon,
+} from 'lucide-react-native';
+import { useTheme, useThemeStore, type ThemeMode } from '@/theme';
 import { useStore } from '@/lib/store';
 import type { SymptomKey } from '@/lib/types';
 import { formatLong, todayISO } from '@/lib/date';
@@ -15,6 +30,12 @@ const TRACK_OPTIONS: { key: SymptomKey; title: string; emoji: string }[] = [
   { key: 'pain', title: 'Pain', emoji: '🤕' },
 ];
 
+const THEME_OPTIONS: { mode: ThemeMode; label: string; icon: LucideIcon }[] = [
+  { mode: 'light', label: 'Light', icon: Sun },
+  { mode: 'dark', label: 'Dark', icon: Moon },
+  { mode: 'system', label: 'System', icon: Smartphone },
+];
+
 function makeInviteCode(): string {
   const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
   let code = '';
@@ -23,6 +44,7 @@ function makeInviteCode(): string {
 }
 
 export default function Settings() {
+  const theme = useTheme();
   const profile = useStore((s) => s.profile);
   const updateProfile = useStore((s) => s.updateProfile);
   const logPeriodStart = useStore((s) => s.logPeriodStart);
@@ -34,6 +56,8 @@ export default function Settings() {
   const deleteAccount = useStore((s) => s.deleteAccount);
   const cloudSync = useStore((s) => s.cloudSync);
   const syncing = useStore((s) => s.syncing);
+  const themeMode = useThemeStore((s) => s.mode);
+  const setThemeMode = useThemeStore((s) => s.setMode);
 
   function toggleTracked(key: SymptomKey) {
     const has = profile.trackedSymptoms.includes(key);
@@ -84,7 +108,7 @@ export default function Settings() {
 
   function logout() {
     clearSession();
-    toast.info('Logged out — your data stays on this device.');
+    toast.info('Logged out. Your data stays on this device.');
   }
 
   function confirmDeleteAccount() {
@@ -101,7 +125,7 @@ export default function Settings() {
               await deleteAccount();
               toast.success('Account deleted.');
             } catch {
-              toast.error('Could not delete the account — check your connection.');
+              toast.error('Could not delete your account. Check your connection.');
             }
           },
         },
@@ -112,9 +136,9 @@ export default function Settings() {
   async function syncNow() {
     try {
       await cloudSync(false);
-      toast.success('Synced ☁️');
+      toast.success('Synced.');
     } catch {
-      toast.error('Sync failed — check your connection.');
+      toast.error('Sync failed. Check your connection.');
     }
   }
 
@@ -126,9 +150,30 @@ export default function Settings() {
     <Screen contentBottom={theme.space[8]}>
       <View style={{ paddingTop: theme.space[2], gap: theme.space[6] }}>
         {/* ── Luna & AI ── */}
-        <Section title="Luna & AI 🤖">
+        <Section title="Luna & AI" icon={Bot}>
           <Card>
             <View style={{ gap: theme.space[3] }}>
+              <View
+                className="flex-row items-center self-start"
+                style={{
+                  gap: theme.space[2],
+                  backgroundColor: theme.color.accent.soft,
+                  borderRadius: theme.radius.full,
+                  paddingHorizontal: theme.space[3],
+                  paddingVertical: 4,
+                }}
+              >
+                <AppText
+                  variant="caption"
+                  style={{ color: theme.color.accent.base, letterSpacing: 1 }}
+                >
+                  BETA
+                </AppText>
+              </View>
+              <AppText variant="caption">
+                Luna is optional. Bring your own AI key to chat with her. Once a key is set, Luna
+                appears in the tab bar. Your key stays on this device.
+              </AppText>
               <View style={{ gap: theme.space[2] }}>
                 <AppText variant="label">Provider</AppText>
                 <Select
@@ -158,7 +203,7 @@ export default function Settings() {
                 />
                 <AppText variant="caption">
                   Get a key at {providerMeta.keyHelp}. Stored only on this device and sent directly to{' '}
-                  {providerMeta.label} — we never see it. 🔒
+                  {providerMeta.label}. We never see it.
                 </AppText>
               </View>
 
@@ -189,8 +234,28 @@ export default function Settings() {
           </Card>
         </Section>
 
+        {/* ── Appearance ── */}
+        <Section title="Appearance" icon={SunMoon}>
+          <Card>
+            <View className="flex-row" style={{ gap: theme.space[2] }}>
+              {THEME_OPTIONS.map((o) => (
+                <ChoiceChip
+                  key={o.mode}
+                  label={o.label}
+                  icon={o.icon}
+                  selected={themeMode === o.mode}
+                  onPress={() => setThemeMode(o.mode)}
+                />
+              ))}
+            </View>
+            <AppText variant="caption" style={{ marginTop: theme.space[2] }}>
+              System follows your phone's light or dark setting.
+            </AppText>
+          </Card>
+        </Section>
+
         {/* ── Cycle ── */}
-        <Section title="Your cycle 🌙">
+        <Section title="Your cycle" icon={Repeat}>
           <Card>
             <Stepper
               label="Average cycle length"
@@ -226,7 +291,7 @@ export default function Settings() {
                 variant="secondary"
                 onPress={() => {
                   logPeriodStart(todayISO());
-                  toast.success('Period start saved 🩸');
+                  toast.success('Period start saved.');
                 }}
               />
             </View>
@@ -234,14 +299,13 @@ export default function Settings() {
         </Section>
 
         {/* ── Tracked symptoms ── */}
-        <Section title="What you track ✅">
+        <Section title="What you track" icon={ListChecks}>
           <Card>
             <View className="flex-row flex-wrap" style={{ gap: theme.space[2] }}>
               {TRACK_OPTIONS.map((o) => (
                 <ChoiceChip
                   key={o.key}
                   label={o.title}
-                  emoji={o.emoji}
                   selected={profile.trackedSymptoms.includes(o.key)}
                   onPress={() => toggleTracked(o.key)}
                 />
@@ -251,7 +315,7 @@ export default function Settings() {
         </Section>
 
         {/* ── Notifications ── */}
-        <Section title="Notifications 🔔">
+        <Section title="Notifications" icon={Bell}>
           <Card>
             <ToggleRow
               label="Enable notifications"
@@ -284,7 +348,7 @@ export default function Settings() {
         </Section>
 
         {/* ── Partner sharing ── */}
-        <Section title="Partner sharing 💞">
+        <Section title="Partner sharing" icon={Heart}>
           <Card>
             <ToggleRow
               label="Enable partner sharing"
@@ -334,7 +398,7 @@ export default function Settings() {
         </Section>
 
         {/* ── Account ── */}
-        <Section title="Account ☁️">
+        <Section title="Account" icon={User}>
           <Card>
             {session ? (
               <View style={{ gap: theme.space[3] }}>
@@ -344,7 +408,7 @@ export default function Settings() {
                   <AppText variant="caption">
                     {syncing
                       ? 'Syncing…'
-                      : 'Your logs and settings back up to the cloud automatically. Your AI key stays on this device. ☁️'}
+                      : 'Your logs and settings back up to the cloud automatically. Your AI key stays on this device.'}
                   </AppText>
                 </View>
                 <Button
@@ -364,7 +428,7 @@ export default function Settings() {
             ) : (
               <View style={{ gap: theme.space[3] }}>
                 <AppText variant="body">
-                  You're in local mode — everything lives on this device. Create an account for cloud
+                  You're in local mode. Everything lives on this device. Create an account for cloud
                   backup and sync across devices. Your AI key always stays local. (Optional.)
                 </AppText>
                 <Button title="Create account" onPress={() => router.push('/auth?mode=signup')} />
@@ -379,7 +443,7 @@ export default function Settings() {
         </Section>
 
         {/* ── Data & privacy ── */}
-        <Section title="Data & privacy 🔒">
+        <Section title="Data & privacy" icon={ShieldCheck}>
           <Card>
             <AppText variant="body">Your health data is never sold or shared. Export or delete it anytime.</AppText>
             <Divider />
@@ -394,10 +458,22 @@ export default function Settings() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  icon: Icon,
+  children,
+}: {
+  title: string;
+  icon: LucideIcon;
+  children: React.ReactNode;
+}) {
+  const theme = useTheme();
   return (
     <View style={{ gap: theme.space[3] }}>
-      <AppText variant="h2">{title}</AppText>
+      <View className="flex-row items-center" style={{ gap: theme.space[2] }}>
+        <Icon size={theme.size.iconMd} color={theme.color.primary.base} />
+        <AppText variant="h2">{title}</AppText>
+      </View>
       {children}
     </View>
   );
@@ -418,6 +494,7 @@ function Stepper({
   max: number;
   onChange: (n: number) => void;
 }) {
+  const theme = useTheme();
   return (
     <View className="flex-row items-center justify-between" style={{ gap: theme.space[3] }}>
       <AppText variant="body" className="flex-1">{label}</AppText>
@@ -458,6 +535,7 @@ function ToggleRow({
   value: boolean;
   onChange: (v: boolean) => void;
 }) {
+  const theme = useTheme();
   return (
     <View className="flex-row items-center justify-between" style={{ gap: theme.space[3] }}>
       <AppText variant="body" className="flex-1">{label}</AppText>

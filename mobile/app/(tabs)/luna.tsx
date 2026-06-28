@@ -4,6 +4,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  Text,
   TextInput,
   View,
 } from 'react-native';
@@ -11,7 +12,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Send } from 'lucide-react-native';
-import { theme, lineHeight } from '@/theme';
+import { lineHeight, useTheme } from '@/theme';
 import { useStore } from '@/lib/store';
 import { phaseInfoFor } from '@/lib/cycle';
 import { buildLunaSystem } from '@/lib/ai/prompt';
@@ -22,10 +23,11 @@ import { AppText, Button, Card, ChoiceChip, TypingDots } from '@/components/ui';
 const GREETING: ChatMsg = {
   role: 'assistant',
   content:
-    "Hey, I'm Luna 🌙 Ask me anything about your cycle, how you're feeling, or what might help today. I'm here to explain and support — never to judge.",
+    "Hey, I'm Luna. Ask me anything about your cycle, how you're feeling, or what might help today. I'm here to explain and support, never to judge.",
 };
 
 export default function Luna() {
+  const theme = useTheme();
   const insets = useSafeAreaInsets();
   const profile = useStore((s) => s.profile);
   const logs = useStore((s) => s.logs);
@@ -90,11 +92,14 @@ export default function Luna() {
           className="border-b border-line px-4"
           style={{ paddingBottom: theme.space[3], gap: theme.space[2] }}
         >
-          <AppText variant="h2">Luna 🌙</AppText>
+          <View className="flex-row items-center" style={{ gap: theme.space[2] }}>
+            <AppText variant="h2">Luna</AppText>
+            <BetaBadge />
+          </View>
           {hasKey ? (
             <View className="flex-row" style={{ gap: theme.space[2] }}>
-              <ChoiceChip label="Help me 💡" selected={mode === 'support'} onPress={() => setMode('support')} />
-              <ChoiceChip label="Just listen 🤍" selected={mode === 'listen'} onPress={() => setMode('listen')} />
+              <ChoiceChip label="Help me" selected={mode === 'support'} onPress={() => setMode('support')} />
+              <ChoiceChip label="Just listen" selected={mode === 'listen'} onPress={() => setMode('listen')} />
             </View>
           ) : (
             <AppText variant="secondary">Connect an AI provider to start chatting.</AppText>
@@ -105,10 +110,10 @@ export default function Luna() {
           <ScrollView contentContainerStyle={{ padding: theme.space[4], gap: theme.space[4] }}>
             <Card roomy>
               <View style={{ gap: theme.space[3] }}>
-                <AppText variant="h3">Bring your own AI ✨</AppText>
+                <AppText variant="h3">Bring your own AI</AppText>
                 <AppText variant="secondary">
-                  Luna runs on the AI provider of your choice — Claude, Gemini, OpenAI, or OpenRouter.
-                  Add your own API key (it stays on this device) and pick a model.
+                  Luna runs on the AI provider you choose: Claude, Gemini, OpenAI, or OpenRouter.
+                  Add your own API key and pick a model. Your key stays on this device.
                 </AppText>
                 <Button title="Set up Luna in Settings" onPress={() => router.push('/settings')} />
               </View>
@@ -149,8 +154,8 @@ export default function Luna() {
                 </View>
               ) : null}
               <AppText variant="caption" style={{ marginTop: theme.space[2] }}>
-                Luna shares general information and support — not medical diagnosis. For anything
-                worrying, please talk to a doctor. 💛  ·  via {PROVIDERS[aiConfig.provider].label}
+                Luna shares general information and support, not a medical diagnosis. If something
+                feels worrying, please talk to a doctor. Via {PROVIDERS[aiConfig.provider].label}.
               </AppText>
             </ScrollView>
 
@@ -191,7 +196,33 @@ export default function Luna() {
   );
 }
 
+function BetaBadge() {
+  const theme = useTheme();
+  return (
+    <View
+      style={{
+        backgroundColor: theme.color.accent.soft,
+        borderRadius: theme.radius.full,
+        paddingHorizontal: theme.space[2],
+        paddingVertical: 2,
+      }}
+    >
+      <Text
+        style={{
+          color: theme.color.accent.base,
+          fontFamily: theme.font.family.sansSemibold,
+          fontSize: 11,
+          letterSpacing: 1,
+        }}
+      >
+        BETA
+      </Text>
+    </View>
+  );
+}
+
 function Bubble({ message, index }: { message: ChatMsg; index: number }) {
+  const theme = useTheme();
   const isUser = message.role === 'user';
   return (
     <Animated.View

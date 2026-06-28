@@ -4,6 +4,7 @@ export type PhaseKey = 'flow' | 'glow' | 'peak' | 'dip';
 export interface Theme {
   color: {
     primary: { light: string; base: string; dark: string };
+    accent: { base: string; soft: string };
     neutral: Record<50 | 100 | 200 | 300 | 500 | 700 | 900, string>;
     status: {
       success: string;
@@ -20,8 +21,25 @@ export interface Theme {
   space: Record<1 | 2 | 3 | 4 | 6 | 8 | 12 | 16, number>;
   radius: { sm: number; md: number; lg: number; full: number };
   font: {
-    family: { base: string; mono: string };
-    size: { xs: number; sm: number; base: number; lg: number; xl: number; '2xl': number };
+    family: {
+      base: string;
+      sans: string;
+      sansMedium: string;
+      sansSemibold: string;
+      sansBold: string;
+      display: string;
+      displayBold: string;
+      mono: string;
+    };
+    size: {
+      xs: number;
+      sm: number;
+      base: number;
+      lg: number;
+      xl: number;
+      '2xl': number;
+      '3xl': number;
+    };
     weight: { normal: string; medium: string; semibold: string; bold: string };
     lineHeight: { tight: number; normal: number; relaxed: number };
   };
@@ -40,3 +58,6 @@ export interface Theme {
 }
 
 export const theme: Theme;
+export const lightColor: Theme['color'];
+export const darkColor: Theme['color'];
+export function cssVars(color: Theme['color']): Record<string, string>;

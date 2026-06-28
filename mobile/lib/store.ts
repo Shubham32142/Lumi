@@ -83,8 +83,10 @@ interface AppState {
   aiConfig: AiConfig; // user's own AI provider + key (stored on-device only — never synced)
   session: Session | null; // null = local mode
   syncing: boolean;
+  supporterCode: string | null; // set when someone joins as a partner/supporter
 
   completeOnboarding: (profile: Profile) => void;
+  becomeSupporter: (code: string) => void;
   updateProfile: (patch: Partial<Profile>) => void;
   upsertLog: (date: string, patch: Partial<CycleLog>) => void;
   getLog: (date: string) => CycleLog | undefined;
@@ -113,6 +115,7 @@ export const useStore = create<AppState>()(
       aiConfig: DEFAULT_AI_CONFIG,
       session: null,
       syncing: false,
+      supporterCode: null,
 
       completeOnboarding: (profile) => {
         const starts = profile.lastPeriodDate ? [profile.lastPeriodDate] : [];
@@ -120,6 +123,10 @@ export const useStore = create<AppState>()(
         const s = get();
         if (s.session) pushProfileUp(s.session.token, s);
       },
+
+      // Someone joining to support a partner: skip cycle setup, remember their code.
+      becomeSupporter: (code) =>
+        set({ onboarded: true, supporterCode: code.trim() || null }),
 
       updateProfile: (patch) => {
         set((s) => ({ profile: { ...s.profile, ...patch } }));
@@ -238,7 +245,9 @@ export const useStore = create<AppState>()(
             const bookmarks = Array.from(
               new Set([...(s.bookmarks ?? []), ...(prof.bookmarks ?? [])]),
             );
-            return { logs: mergedLogs, profile, periodStarts, bookmarks };
+            // A returning account with real data skips onboarding on a new device.
+            const onboarded = s.onboarded || cloudHasData;
+            return { logs: mergedLogs, profile, periodStarts, bookmarks, onboarded };
           });
 
           // After a login reconcile, push the merged union back so the cloud holds it.
@@ -276,6 +285,7 @@ export const useStore = create<AppState>()(
           bookmarks: [],
           aiConfig: DEFAULT_AI_CONFIG,
           session: null,
+          supporterCode: null,
         }),
     }),
     {
@@ -289,6 +299,7 @@ export const useStore = create<AppState>()(
         bookmarks: s.bookmarks,
         aiConfig: s.aiConfig,
         session: s.session,
+        supporterCode: s.supporterCode,
       }),
       onRehydrateStorage: () => (state) => {
         // Mark hydration so the UI can avoid a flash of the wrong route.

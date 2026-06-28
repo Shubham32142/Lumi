@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 import { Bookmark, BookmarkCheck, ChevronDown, ChevronUp, Search } from 'lucide-react-native';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { useStore } from '@/lib/store';
 import type { Phase } from '@/lib/types';
-import { PHASE_ORDER, phaseMeta } from '@/theme/phases';
+import { PHASE_ORDER, phaseMeta, phaseColors } from '@/theme/phases';
 import { phaseInfoFor } from '@/lib/cycle';
 import { ARTICLES, type Article, categoryMeta } from '@/content/education';
 import { AppText, Card, FadeIn, Screen } from '@/components/ui';
@@ -12,6 +12,7 @@ import { AppText, Card, FadeIn, Screen } from '@/components/ui';
 type Filter = Phase | 'saved';
 
 export default function Learn() {
+  const theme = useTheme();
   const profile = useStore((s) => s.profile);
   const bookmarks = useStore((s) => s.bookmarks);
   const toggleBookmark = useStore((s) => s.toggleBookmark);
@@ -41,7 +42,7 @@ export default function Learn() {
   return (
     <Screen>
       <View style={{ paddingTop: theme.space[2], gap: theme.space[4] }}>
-        <AppText variant="h1">Learn 📚</AppText>
+        <AppText variant="h1">Learn</AppText>
 
         {/* Search */}
         <View
@@ -52,7 +53,7 @@ export default function Learn() {
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Search the library…"
+            placeholder="Search the library"
             placeholderTextColor={theme.color.text.secondary}
             className="flex-1 text-base text-ink"
           />
@@ -62,6 +63,8 @@ export default function Learn() {
         <View className="flex-row flex-wrap" style={{ gap: theme.space[2] }}>
           {PHASE_ORDER.map((p) => {
             const m = phaseMeta(p);
+            const PhaseIcon = m.icon;
+            const { accent, soft } = phaseColors(theme.color, p);
             const active = filter === p;
             return (
               <Pressable
@@ -69,14 +72,19 @@ export default function Learn() {
                 onPress={() => setFilter(p)}
                 accessibilityRole="button"
                 accessibilityState={{ selected: active }}
-                className="rounded-md border px-3 py-2"
+                className="flex-row items-center rounded-md border px-3 py-2"
                 style={{
-                  backgroundColor: active ? m.soft : theme.color.surface.page,
-                  borderColor: active ? m.accent : theme.color.border.input,
+                  gap: theme.space[1],
+                  backgroundColor: active ? soft : theme.color.surface.page,
+                  borderColor: active ? accent : theme.color.border.input,
                 }}
               >
-                <AppText variant="bodySm" style={{ color: active ? m.accent : theme.color.text.label }}>
-                  {m.emoji} {m.name}
+                <PhaseIcon
+                  size={theme.size.iconSm}
+                  color={active ? accent : theme.color.text.label}
+                />
+                <AppText variant="bodySm" style={{ color: active ? accent : theme.color.text.label }}>
+                  {m.name}
                 </AppText>
               </Pressable>
             );
@@ -85,12 +93,17 @@ export default function Learn() {
             onPress={() => setFilter('saved')}
             accessibilityRole="button"
             accessibilityState={{ selected: filter === 'saved' }}
-            className={`rounded-md border px-3 py-2 ${
+            className={`flex-row items-center rounded-md border px-3 py-2 ${
               filter === 'saved' ? 'border-primary bg-primary-light' : 'border-line-input bg-page'
             }`}
+            style={{ gap: theme.space[1] }}
           >
+            <Bookmark
+              size={theme.size.iconSm}
+              color={filter === 'saved' ? theme.color.text.primary : theme.color.text.label}
+            />
             <AppText variant="bodySm" className={filter === 'saved' ? 'text-ink' : 'text-ink-label'}>
-              🔖 Saved
+              Saved
             </AppText>
           </Pressable>
         </View>
@@ -100,7 +113,7 @@ export default function Learn() {
           <Card>
             <AppText variant="secondary">
               {filter === 'saved'
-                ? 'No bookmarks yet — tap the ribbon on any article to save it.'
+                ? 'No bookmarks yet. Tap the ribbon on any article to save it.'
                 : 'Nothing matches that search. Try another word?'}
             </AppText>
           </Card>
@@ -108,6 +121,7 @@ export default function Learn() {
           <View style={{ gap: theme.space[3] }}>
             {results.map((a, i) => {
               const cat = categoryMeta(a.category);
+              const CatIcon = cat.icon;
               const isOpen = expanded === a.id;
               const isSaved = bookmarks.includes(a.id);
               return (
@@ -116,7 +130,10 @@ export default function Learn() {
                   <View style={{ gap: theme.space[2] }}>
                     <View className="flex-row items-start justify-between" style={{ gap: theme.space[2] }}>
                       <View className="flex-1" style={{ gap: theme.space[1] }}>
-                        <AppText variant="caption">{cat.emoji} {cat.label.toUpperCase()}</AppText>
+                        <View className="flex-row items-center" style={{ gap: theme.space[1] }}>
+                          <CatIcon size={theme.size.iconSm} color={theme.color.text.secondary} />
+                          <AppText variant="caption">{cat.label.toUpperCase()}</AppText>
+                        </View>
                         <AppText variant="title">{a.title}</AppText>
                       </View>
                       <Pressable

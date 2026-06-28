@@ -17,7 +17,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Circle, G } from 'react-native-svg';
-import { theme, lineHeight } from '@/theme';
+import { lineHeight, useTheme } from '@/theme';
 import { QUOTES } from '@/content/quotes';
 import { LOGO } from './Logo';
 
@@ -31,6 +31,7 @@ interface AnimatedSplashProps {
 }
 
 export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
+  const theme = useTheme();
   const draw = useSharedValue(0); // 0 → 1 crescent draw
   const dot = useSharedValue(0); // 0 → 1 dot pop
   const pulse = useSharedValue(0); // dot pulse loop
@@ -81,7 +82,14 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
   const containerStyle = useAnimatedStyle(() => ({ opacity: container.value }));
 
   return (
-    <Animated.View style={[StyleSheet.absoluteFill, styles.root, containerStyle]}>
+    <Animated.View
+      style={[
+        StyleSheet.absoluteFill,
+        styles.root,
+        { backgroundColor: theme.color.surface.app },
+        containerStyle,
+      ]}
+    >
       <Svg width={132} height={132} viewBox={`0 0 ${LOGO.box} ${LOGO.box}`}>
         <G rotation={LOGO.rot} origin={`${LOGO.cx}, ${LOGO.cy}`}>
           <AnimatedCircle
@@ -106,11 +114,13 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
       </Svg>
 
       <Animated.View style={[{ marginTop: theme.space[6] }, wordStyle]}>
-        <Text style={styles.word}>Lumi</Text>
+        <Text style={[styles.word, { color: theme.color.text.primary, fontFamily: theme.font.family.displayBold }]}>
+          Lumi
+        </Text>
       </Animated.View>
 
       <Animated.View style={[styles.quoteWrap, quoteStyle]}>
-        <Text style={styles.quote}>{quoteText}</Text>
+        <Text style={[styles.quote, { color: theme.color.text.secondary }]}>{quoteText}</Text>
       </Animated.View>
     </Animated.View>
   );
@@ -118,25 +128,21 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
 
 const styles = StyleSheet.create({
   root: {
-    backgroundColor: theme.color.surface.app,
     alignItems: 'center',
     justifyContent: 'center',
   },
   word: {
-    fontSize: 34,
-    fontWeight: '700',
-    color: theme.color.text.primary,
-    letterSpacing: 2,
+    fontSize: 40,
+    letterSpacing: 1,
   },
   quoteWrap: {
     position: 'absolute',
     bottom: 84,
-    paddingHorizontal: theme.space[8],
+    paddingHorizontal: 32,
   },
   quote: {
     textAlign: 'center',
-    color: theme.color.text.secondary,
-    fontSize: theme.font.size.sm,
-    lineHeight: lineHeight(theme.font.size.sm),
+    fontSize: 14,
+    lineHeight: lineHeight(14),
   },
 });

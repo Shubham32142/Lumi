@@ -3,7 +3,7 @@ import { TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import Animated, { FadeIn as RFadeIn } from 'react-native-reanimated';
 import { Check } from 'lucide-react-native';
-import { theme, lineHeight } from '@/theme';
+import { lineHeight, useTheme } from '@/theme';
 import { useStore } from '@/lib/store';
 import type { CycleLog, PainType, SymptomKey } from '@/lib/types';
 import { formatLong, todayISO } from '@/lib/date';
@@ -23,6 +23,7 @@ const LOG_FIELD: Record<Exclude<SymptomKey, 'pain'>, keyof CycleLog> = {
 };
 
 export default function Log() {
+  const theme = useTheme();
   const params = useLocalSearchParams<{ date?: string }>();
   const date = params.date ?? todayISO();
   const tracked = useStore((s) => s.profile.trackedSymptoms);
@@ -90,9 +91,9 @@ export default function Log() {
               </Animated.View>
             ) : null}
           </View>
-          <AppText variant="h1">How are you feeling? 💭</AppText>
+          <AppText variant="h1">How are you feeling?</AppText>
           <AppText variant="secondary">
-            Tap what fits — it saves on its own. Skip what doesn’t. ✨
+            Tap what fits. It saves on its own. Skip anything that doesn't.
           </AppText>
         </View>
 
@@ -116,7 +117,6 @@ export default function Log() {
                       <ChoiceChip
                         key={opt.value}
                         label={opt.label}
-                        emoji={opt.emoji}
                         selected={isSelected}
                         onPress={() => (cfg.multi ? toggleMulti(opt.value) : setField(field, opt.value))}
                       />
@@ -132,7 +132,7 @@ export default function Log() {
         {isTracked('pain') ? (
           <FadeIn delay={SYMPTOM_ORDER.length * 45}>
             <View style={{ gap: theme.space[2] }}>
-              <AppText variant="label">🤕 Pain</AppText>
+              <AppText variant="label">Pain</AppText>
               <View style={{ gap: theme.space[2] }}>
                 {PAIN_TYPES.map((p) => {
                   const entry = log?.pain?.find((x) => x.type === p.value);
@@ -140,7 +140,6 @@ export default function Log() {
                     <View key={p.value} style={{ gap: theme.space[2] }}>
                       <ChoiceChip
                         label={p.label}
-                        emoji={p.emoji}
                         selected={Boolean(entry)}
                         onPress={() => togglePain(p.value as PainType)}
                       />
@@ -167,14 +166,14 @@ export default function Log() {
 
         {/* Notes */}
         <View style={{ gap: theme.space[2] }}>
-          <AppText variant="label">📝 Anything else?</AppText>
+          <AppText variant="label">Anything else?</AppText>
           <TextInput
             value={log?.notes ?? ''}
             onChangeText={(t) => {
               upsertLog(date, { notes: t || undefined });
               bump();
             }}
-            placeholder="A quick note to your future self…"
+            placeholder="A quick note to your future self"
             placeholderTextColor={theme.color.text.secondary}
             multiline
             className="rounded-md border border-line-input bg-page p-3 text-base text-ink"

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 import { router } from 'expo-router';
-import { theme } from '@/theme';
+import { Droplet } from 'lucide-react-native';
+import { useTheme } from '@/theme';
 import { useStore } from '@/lib/store';
 import { toast } from '@/lib/toast';
 import { isPredictedPeriodDay, upcomingPeriodStarts } from '@/lib/cycle';
@@ -11,6 +12,7 @@ import { MonthCalendar, type Cursor, type DayMeta } from '@/components/MonthCale
 import { CycleTimeline } from '@/components/CycleTimeline';
 
 export default function Calendar() {
+  const theme = useTheme();
   const profile = useStore((s) => s.profile);
   const logs = useStore((s) => s.logs);
   const periodStarts = useStore((s) => s.periodStarts);
@@ -51,7 +53,7 @@ export default function Calendar() {
       toast.info('Period removed');
     } else {
       logPeriodStart(iso);
-      toast.success(`Period set from ${formatShort(iso)} 🩸`);
+      toast.success(`Period set from ${formatShort(iso)}.`);
     }
   }
 
@@ -88,14 +90,14 @@ export default function Calendar() {
             <View style={{ gap: theme.space[2] }}>
               <AppText variant="label">Editing period dates</AppText>
               <AppText variant="secondary">
-                Tap the day your period started — we'll fill in the next {profile.periodLength} days.
+                Tap the day your period started. We'll fill in the next {profile.periodLength} days.
                 Tap a period day again to remove it.
               </AppText>
               <Button title="Done" onPress={() => setEditing(false)} />
             </View>
           </Card>
         ) : (
-          <Button title="Edit period dates 🩸" variant="secondary" onPress={() => setEditing(true)} />
+          <Button title="Edit period dates" variant="secondary" onPress={() => setEditing(true)} />
         )}
 
         {/* Where am I in my cycle? */}
@@ -107,8 +109,8 @@ export default function Calendar() {
         ) : (
           <Card>
             <AppText variant="secondary">
-              Tap “Edit period dates” and mark when your last period began — your phases and
-              predictions will appear here.
+              Tap “Edit period dates” and mark when your last period began. Your phases and
+              predictions will show up here.
             </AppText>
           </Card>
         )}
@@ -119,14 +121,17 @@ export default function Calendar() {
             <AppText variant="label" style={{ marginBottom: theme.space[2] }}>
               Next predicted periods
             </AppText>
-            <View style={{ gap: theme.space[1] }}>
+            <View style={{ gap: theme.space[2] }}>
               {upcoming.map((iso) => (
-                <AppText key={iso} variant="body">🩸 {formatShort(iso)}</AppText>
+                <View key={iso} className="flex-row items-center" style={{ gap: theme.space[2] }}>
+                  <Droplet size={theme.size.iconSm} color={theme.color.phase.flow.base} />
+                  <AppText variant="body">{formatShort(iso)}</AppText>
+                </View>
               ))}
             </View>
             {profile.isIrregular ? (
               <AppText variant="caption" style={{ marginTop: theme.space[2] }}>
-                These are gentle estimates — irregular cycles wander, and that's okay.
+                These are gentle estimates. Irregular cycles wander, and that's okay.
               </AppText>
             ) : null}
           </Card>
@@ -137,6 +142,7 @@ export default function Calendar() {
 }
 
 function Legend({ kind, label }: { kind: 'confirmed' | 'predicted' | 'logged'; label: string }) {
+  const theme = useTheme();
   const rose = theme.color.primary.base;
   const dot =
     kind === 'confirmed' ? (

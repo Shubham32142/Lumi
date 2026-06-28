@@ -1,3 +1,46 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Light ("Paper Day") defaults for the colour variables. ThemeProvider overrides
+   these at runtime with vars() when the active theme is dark. Keep in sync with
+   the light palette in theme/tokens.js. */
+@layer base {
+  :root {
+    --c-primary: #A83254;
+    --c-primary-light: #F3DCE2;
+    --c-primary-dark: #882843;
+    --c-accent: #B47A16;
+    --c-accent-soft: #F6E7C7;
+    --c-neutral-50: #FBF6EE;
+    --c-neutral-100: #F4EADF;
+    --c-neutral-200: #E7D8CC;
+    --c-neutral-300: #D8C4B8;
+    --c-neutral-500: #9A8088;
+    --c-neutral-700: #5A4248;
+    --c-neutral-900: #2A1A20;
+    --c-success: #2E7D52;
+    --c-error: #C0413A;
+    --c-error-dark: #9E332D;
+    --c-warning: #A66A1F;
+    --c-info: #3A6EA5;
+    --c-app: #F6EFE3;
+    --c-page: #FCF7EE;
+    --c-muted: #F1E6DA;
+    --c-hover: #ECDFD0;
+    --c-line: #E7D8CC;
+    --c-line-input: #D8C4B8;
+    --c-ink: #2A1A20;
+    --c-ink-secondary: #9A8088;
+    --c-ink-label: #5A4248;
+    --c-ink-on: #FFF9F0;
+    --c-phase-flow: #B23A5C;
+    --c-phase-flow-soft: #F3DBE2;
+    --c-phase-glow: #C2703F;
+    --c-phase-glow-soft: #F4E1D1;
+    --c-phase-peak: #B98F23;
+    --c-phase-peak-soft: #F4E8C6;
+    --c-phase-dip: #7E5C9E;
+    --c-phase-dip-soft: #E9DEF1;
+  }
+}

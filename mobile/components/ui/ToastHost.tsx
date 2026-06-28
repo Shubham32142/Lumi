@@ -6,18 +6,19 @@ import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInUp, FadeOutUp, LinearTransition } from 'react-native-reanimated';
 import { Check, Info, X } from 'lucide-react-native';
-import { theme } from '@/theme';
+import { useTheme, type ActiveTheme } from '@/theme';
 import { useToastStore, type ToastType } from '@/lib/toast';
 import { AppText } from './AppText';
 
-const ACCENT: Record<ToastType, string> = {
-  success: theme.color.status.success,
-  error: theme.color.status.error,
-  info: theme.color.primary.base,
-};
+function accentFor(theme: ActiveTheme, type: ToastType): string {
+  if (type === 'success') return theme.color.status.success;
+  if (type === 'error') return theme.color.status.error;
+  return theme.color.primary.base;
+}
 
 function ToastIcon({ type }: { type: ToastType }) {
-  const color = ACCENT[type];
+  const theme = useTheme();
+  const color = accentFor(theme, type);
   const size = theme.size.iconMd;
   if (type === 'success') return <Check size={size} color={color} />;
   if (type === 'error') return <X size={size} color={color} />;
@@ -35,6 +36,7 @@ function ToastRow({
   message: string;
   duration: number;
 }) {
+  const theme = useTheme();
   const dismiss = useToastStore((s) => s.dismiss);
 
   useEffect(() => {
@@ -61,7 +63,7 @@ function ToastRow({
           alignItems: 'center',
           gap: theme.space[2],
           backgroundColor: theme.color.surface.page,
-          borderColor: ACCENT[type],
+          borderColor: accentFor(theme, type),
           borderWidth: theme.borderWidth,
           borderRadius: theme.radius.lg,
           paddingVertical: theme.space[3],
@@ -78,6 +80,7 @@ function ToastRow({
 }
 
 export function ToastHost() {
+  const theme = useTheme();
   const insets = useSafeAreaInsets();
   const toasts = useToastStore((s) => s.toasts);
 

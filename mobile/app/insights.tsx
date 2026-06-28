@@ -47,11 +47,11 @@ export default function Insights() {
     return (
       <Screen>
         <View style={{ paddingTop: theme.space[2], gap: theme.space[3] }}>
-          <AppText variant="h1">Insights 📈</AppText>
+          <AppText variant="h1">Insights</AppText>
           <Card roomy>
             <AppText variant="body">
-              Log a few more days and your patterns will start showing up here — like which
-              moods cluster, your typical energy, and when your tough days tend to land. 💪
+              Log a few more days and your patterns will start showing up here. You'll see which
+              moods cluster, your typical energy, and when your tough days tend to land.
             </AppText>
           </Card>
           <AppText variant="secondary">{data.total} of 3 days logged so far.</AppText>
@@ -70,10 +70,10 @@ export default function Insights() {
             <Card roomy>
               <AppText variant="label">Your pattern</AppText>
               <AppText variant="h2" style={{ marginTop: theme.space[1] }}>
-                Tough days tend to hit around day {data.avgToughDay} 🌧️
+                Tough days tend to hit around day {data.avgToughDay}
               </AppText>
               <AppText variant="secondary" style={{ marginTop: theme.space[1] }}>
-                That's based on when you logged low moods, pain, or bad bloating. Knowing it
+                That's from the days you logged low moods, pain, or bad bloating. Knowing it
                 lets you plan a softer week.
               </AppText>
             </Card>
@@ -81,13 +81,13 @@ export default function Insights() {
         ) : null}
 
         <FadeIn delay={120}>
-          <DistroCard title="😊 Mood" counts={data.moodCounts} group="mood" total={data.total} />
+          <DistroCard title="Mood" counts={data.moodCounts} group="mood" total={data.total} />
         </FadeIn>
         <FadeIn delay={180}>
-          <DistroCard title="⚡ Energy" counts={data.energyCounts} group="energy" total={data.total} />
+          <DistroCard title="Energy" counts={data.energyCounts} group="energy" total={data.total} />
         </FadeIn>
 
-        <AppText variant="caption">Based on {data.total} logged days. The more you log, the sharper this gets.</AppText>
+        <AppText variant="caption">Based on {data.total} logged days. The more you log, the clearer this gets.</AppText>
       </View>
     </Screen>
   );

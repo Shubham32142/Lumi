@@ -1,7 +1,12 @@
-// Typed entry point for the design tokens. Import everywhere as:
-//   import { theme } from '@/theme';
+// Typed entry point for the design tokens.
+//   import { useTheme } from '@/theme';  // reactive — colours follow light/dark
+//   import { theme } from '@/theme';     // static LIGHT — only for non-colour tokens
 export { theme } from './tokens';
 export type { Theme, PhaseKey } from './tokens';
+export { ThemeProvider, useTheme } from './ThemeProvider';
+export type { ActiveTheme } from './ThemeProvider';
+export { useThemeStore } from './themeStore';
+export type { ThemeMode } from './themeStore';
 
 import { theme } from './tokens';
 

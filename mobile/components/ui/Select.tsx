@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { ChevronDown } from 'lucide-react-native';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { AppText } from './AppText';
 import { FadeIn } from './FadeIn';
 
@@ -19,6 +19,7 @@ interface SelectProps {
 }
 
 export function Select({ value, options, onChange, placeholder = 'Select…' }: SelectProps) {
+  const theme = useTheme();
   const [open, setOpen] = useState(false);
   const current = options.find((o) => o.value === value);
 

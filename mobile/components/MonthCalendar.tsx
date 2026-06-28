@@ -4,7 +4,7 @@
 // No per-day color fills ("rainbow") — the calendar reads as a calendar.
 import { Pressable, View } from 'react-native';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { monthGrid, monthLabel, todayISO, WEEKDAYS } from '@/lib/date';
 import { AppText } from '@/components/ui';
 
@@ -35,9 +35,9 @@ function shiftMonth({ year, monthIndex }: Cursor, delta: number): Cursor {
   return { year: year + Math.floor(m / 12), monthIndex: ((m % 12) + 12) % 12 };
 }
 
-const ROSE = theme.color.primary.base;
-
 function Marker({ meta }: { meta?: DayMeta }) {
+  const theme = useTheme();
+  const ROSE = theme.color.primary.base;
   // Reserve a fixed slot so numbers stay vertically aligned across the grid.
   let dot = null;
   if (meta?.period === 'confirmed') {
@@ -73,6 +73,7 @@ export function MonthCalendar({
   dayMeta,
   disableFuture = false,
 }: MonthCalendarProps) {
+  const theme = useTheme();
   const today = todayISO();
   const cells = monthGrid(cursor.year, cursor.monthIndex);
 

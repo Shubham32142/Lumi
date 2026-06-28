@@ -1,8 +1,20 @@
 import { useState } from 'react';
 import { Pressable, Switch, View } from 'react-native';
 import { router } from 'expo-router';
-import { Minus, Plus } from 'lucide-react-native';
-import { theme } from '@/theme';
+import {
+  Bell,
+  Cake,
+  CalendarDays,
+  CircleCheck,
+  Compass,
+  Heart,
+  ListChecks,
+  Minus,
+  Plus,
+  Ruler,
+  type LucideIcon,
+} from 'lucide-react-native';
+import { useTheme } from '@/theme';
 import {
   DEFAULT_PROFILE,
   DEFAULT_TRACKED,
@@ -31,19 +43,20 @@ import { Logo } from '@/components/Logo';
 const STEPS = 9;
 
 const EXPERIENCE: { value: ExperienceLevel; label: string; hint: string }[] = [
-  { value: 'first_timer', label: 'First Timer', hint: "New to all this — keep it simple" },
+  { value: 'first_timer', label: 'First Timer', hint: 'New to all this, keep it simple' },
   { value: 'somewhat_familiar', label: 'Somewhat Familiar', hint: 'I know the basics' },
   { value: 'know_my_cycle', label: 'I Know My Cycle', hint: 'Give me the details' },
 ];
 
 const AGES: AgeRange[] = ['13-17', '18-25', '26-35', '36+'];
 
-const TRACK_OPTIONS: { key: SymptomKey; title: string; emoji: string }[] = [
-  ...Object.values(SYMPTOM_CONFIG).map((c) => ({ key: c.key, title: c.title, emoji: c.emoji })),
-  { key: 'pain', title: 'Pain', emoji: '🤕' },
+const TRACK_OPTIONS: { key: SymptomKey; title: string }[] = [
+  ...Object.values(SYMPTOM_CONFIG).map((c) => ({ key: c.key, title: c.title })),
+  { key: 'pain', title: 'Pain' },
 ];
 
 export default function Onboarding() {
+  const theme = useTheme();
   const completeOnboarding = useStore((s) => s.completeOnboarding);
 
   const now = new Date();
@@ -99,37 +112,28 @@ export default function Onboarding() {
       </View>
 
       {step === 0 && (
-        <StepShell emoji="🌙" title="Hey! Welcome to Lumi"
-          body="A few quick questions so the app can speak to your body — not a generic average. No name needed, ever.">
+        <StepShell title="Welcome to Lumi"
+          body="A few quick questions so the app can speak to your body, not a generic average. No name needed, ever.">
           <View className="items-center" style={{ paddingVertical: theme.space[2] }}>
             <Logo size={72} />
           </View>
           <Card roomy>
             <AppText variant="body">
               This isn't about perfect tracking. It's about understanding why you feel
-              what you feel — and what actually helps. 💜
+              what you feel, and what actually helps.
             </AppText>
           </Card>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.push('/auth?mode=login')}
-            className="items-center py-2 active:opacity-70"
-          >
-            <AppText variant="bodySm" style={{ color: theme.color.primary.base }}>
-              Already have an account? Log in
-            </AppText>
-          </Pressable>
         </StepShell>
       )}
 
       {step === 1 && (
-        <StepShell emoji="🧭" title="How well do you know your cycle?"
+        <StepShell icon={Compass} title="How well do you know your cycle?"
           body="We'll adjust how much detail we throw at you.">
           <View style={{ gap: theme.space[2] }}>
             {EXPERIENCE.map((o) => (
               <Card key={o.value}>
                 <ChoiceChip
-                  label={`${o.label} — ${o.hint}`}
+                  label={`${o.label} · ${o.hint}`}
                   selected={experienceLevel === o.value}
                   onPress={() => setExperience(o.value)}
                 />
@@ -140,7 +144,7 @@ export default function Onboarding() {
       )}
 
       {step === 2 && (
-        <StepShell emoji="🎂" title="Which age range fits you?"
+        <StepShell icon={Cake} title="Which age range fits you?"
           body="Helps us tailor content. That's it.">
           <View className="flex-row flex-wrap" style={{ gap: theme.space[2] }}>
             {AGES.map((a) => (
@@ -151,12 +155,11 @@ export default function Onboarding() {
       )}
 
       {step === 3 && (
-        <StepShell emoji="🗓️" title="When did your last period start?"
-          body="Tap the day it began. Not sure? Totally fine — skip it.">
+        <StepShell icon={CalendarDays} title="When did your last period start?"
+          body="Tap the day it began. Not sure? That's okay, just skip it.">
           <View style={{ gap: theme.space[3] }}>
             <ChoiceChip
               label="I'm not sure"
-              emoji="🤷"
               selected={!periodKnown}
               onPress={() => {
                 setPeriodKnown(false);
@@ -178,7 +181,7 @@ export default function Onboarding() {
               </Card>
             )}
             {periodKnown && lastPeriodDate ? (
-              <AppText variant="secondary">Got it — {formatLong(lastPeriodDate)}</AppText>
+              <AppText variant="secondary">Got it. {formatLong(lastPeriodDate)}</AppText>
             ) : null}
             {!periodKnown ? (
               <ChoiceChip
@@ -192,8 +195,8 @@ export default function Onboarding() {
       )}
 
       {step === 4 && (
-        <StepShell emoji="📏" title="How long is your cycle, usually?"
-          body="From the first day of one period to the next. The average is 28 — but yours is yours.">
+        <StepShell icon={Ruler} title="How long is your cycle, usually?"
+          body="From the first day of one period to the next. The average is 28, but yours is yours.">
           <View style={{ gap: theme.space[4] }}>
             <Card roomy>
               <View className="flex-row items-center justify-between">
@@ -208,13 +211,12 @@ export default function Onboarding() {
             </Card>
             <ChoiceChip
               label="It's irregular"
-              emoji="🌀"
               selected={isIrregular}
               onPress={() => setIrregular((v) => !v)}
             />
             {isIrregular ? (
               <AppText variant="secondary">
-                No problem — we'll predict gently and learn as you log. Nothing here is "abnormal".
+                No problem. We'll predict gently and learn as you log. Nothing here is "abnormal".
               </AppText>
             ) : null}
           </View>
@@ -222,14 +224,13 @@ export default function Onboarding() {
       )}
 
       {step === 5 && (
-        <StepShell emoji="✅" title="What do you want to track?"
+        <StepShell icon={ListChecks} title="What do you want to track?"
           body="Pick what matters to you. You can change this anytime.">
           <View className="flex-row flex-wrap" style={{ gap: theme.space[2] }}>
             {TRACK_OPTIONS.map((o) => (
               <ChoiceChip
                 key={o.key}
                 label={o.title}
-                emoji={o.emoji}
                 selected={tracked.includes(o.key)}
                 onPress={() => toggleTracked(o.key)}
               />
@@ -239,7 +240,7 @@ export default function Onboarding() {
       )}
 
       {step === 6 && (
-        <StepShell emoji="🔔" title="Want gentle nudges?"
+        <StepShell icon={Bell} title="Want gentle nudges?"
           body="All opt-in. We'll never spam you.">
           <View style={{ gap: theme.space[2] }}>
             <ToggleRow label="Enable notifications" value={notifEnabled} onChange={setNotifEnabled} />
@@ -256,7 +257,7 @@ export default function Onboarding() {
       )}
 
       {step === 7 && (
-        <StepShell emoji="💞" title="Partner mode (optional)"
+        <StepShell icon={Heart} title="Partner mode (optional)"
           body="Let someone close understand your cycle and show up better. You control exactly what they see.">
           <Card roomy>
             <AppText variant="body">
@@ -268,19 +269,13 @@ export default function Onboarding() {
       )}
 
       {step === 8 && (
-        <StepShell emoji="🚀" title="You're all set!"
-          body="You can use everything right now — no account needed. Your data stays on this device.">
+        <StepShell icon={CircleCheck} title="You're all set"
+          body="That's everything. Your cycle, your phases, and gentle predictions are ready.">
           <Card roomy>
             <AppText variant="body">
-              Want cloud backup and sync across devices? Create an account — email + password,
-              nothing else. Or skip it and jump straight in.
+              You can change any of this later in Settings. Let's take a look at your day.
             </AppText>
           </Card>
-          <Button
-            title="Create an account (optional)"
-            variant="secondary"
-            onPress={() => router.push('/auth?mode=signup')}
-          />
         </StepShell>
       )}
 
@@ -292,7 +287,7 @@ export default function Onboarding() {
           </View>
         ) : null}
         <View className="flex-1">
-          <Button title={step >= STEPS - 1 ? "Let's go 🎉" : 'Continue'} onPress={next} />
+          <Button title={step >= STEPS - 1 ? "Let's go" : 'Continue'} onPress={next} />
         </View>
       </View>
       <View style={{ height: theme.space[8] }} />
@@ -301,23 +296,23 @@ export default function Onboarding() {
 }
 
 function StepShell({
-  emoji,
+  icon: Icon,
   title,
   body,
   children,
 }: {
-  emoji: string;
+  icon?: LucideIcon;
   title: string;
   body: string;
   children: React.ReactNode;
 }) {
+  const theme = useTheme();
   return (
     <FadeIn>
       <View style={{ gap: theme.space[4] }}>
         <View style={{ gap: theme.space[2] }}>
-          <AppText variant="h1">
-            {emoji} {title}
-          </AppText>
+          {Icon ? <Icon size={28} color={theme.color.primary.base} /> : null}
+          <AppText variant="h1">{title}</AppText>
           <AppText variant="secondary">{body}</AppText>
         </View>
         {children}
@@ -362,6 +357,7 @@ function StepBtn({
   disabled?: boolean;
   onPress: () => void;
 }) {
+  const theme = useTheme();
   const Icon = icon === 'plus' ? Plus : Minus;
   return (
     <Pressable
@@ -389,6 +385,7 @@ function ToggleRow({
   value: boolean;
   onChange: (v: boolean) => void;
 }) {
+  const theme = useTheme();
   return (
     <Card>
       <View className="flex-row items-center justify-between" style={{ gap: theme.space[3] }}>
