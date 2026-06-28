@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Alert, Pressable, Share, Switch, TextInput, View } from 'react-native';
+import { Alert, Clipboard, Pressable, Share, Switch, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 import {
   Bell,
   Bot,
+  Copy,
   Heart,
   HeartHandshake,
   ListChecks,
@@ -99,6 +100,13 @@ export default function Settings() {
         },
       },
     ]);
+  }
+
+  function copyInviteCode() {
+    const code = profile.partnerSharing.inviteCode;
+    if (!code) return;
+    Clipboard.setString(code);
+    toast.success('Code copied.');
   }
 
   function toggleTracked(key: SymptomKey) {
@@ -424,10 +432,19 @@ export default function Settings() {
             {sharing.enabled ? (
               <>
                 <Divider />
-                <View style={{ gap: theme.space[1] }}>
+                <View style={{ gap: theme.space[2] }}>
                   <AppText variant="label">Invite code</AppText>
-                  <AppText variant="h3">{sharing.inviteCode}</AppText>
-                  <AppText variant="caption">Share this with your partner to link their Support Account.</AppText>
+                  <View className="flex-row items-center justify-between" style={{ gap: theme.space[3] }}>
+                    <AppText variant="h3">{sharing.inviteCode}</AppText>
+                    <Button
+                      title="Copy"
+                      variant="secondary"
+                      fullWidth={false}
+                      onPress={copyInviteCode}
+                      icon={<Copy size={theme.size.iconSm} color={theme.color.text.label} />}
+                    />
+                  </View>
+                  <AppText variant="caption">Share this with your partner so they can connect from their own phone.</AppText>
                 </View>
                 <Divider />
                 <AppText variant="label" style={{ marginBottom: theme.space[2] }}>What they can see</AppText>
